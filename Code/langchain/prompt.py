@@ -3,7 +3,7 @@ from langchain.chat_models import ChatOpenAI
 # initialize the models
 openai = OpenAI(
     model_name="text-davinci-003",
-    openai_api_key="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"
+    openai_api_key="KEY"
 )
 from langchain.prompts import PromptTemplate
 
