@@ -1,0 +1,7 @@
+./data.py: line 1: import: command not found
+./data.py: line 2: import: command not found
+./data.py: line 3: import: command not found
+from: can't read /var/mail/sklearn.preprocessing
+./data.py: line 5: import: command not found
+./data.py: line 7: syntax error near unexpected token `('
+./data.py: line 7: `def get_historical_returns(ticker, start_date, end_date, frequency="monthly"):'
