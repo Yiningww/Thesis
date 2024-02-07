@@ -1,12 +1,67 @@
 from langchain.llms import OpenAI
 from langchain.chat_models import ChatOpenAI
+import pandas as pd
+import argparse
+import datetime
+import yfinance as yf
+import os
+
+from langchain.prompts import PromptTemplate
+
+def parse_arguments():
+    parser = argparse.ArgumentParser(description="langchain prompting")
+
+    parser.add_argument("--start_date", type=str, default="2016-01-31", help="startdate")
+    parser.add_argument("--path_to_file", type=str, default="../Data/", help="startdate")
+    parser.add_argument("--end_date", type=str, default="2017-12-31", help="enddate")
+    parser.add_argument("--featurenames", type=str, default="Price/Earnings,Price/Book Value,Return on Assets,Return on Equity ,Free Cash Flow per Share,Price/Cash Flow", help="feature names")
+    parser.add_argument("--method", type=str, default="zero_shot_cot", choices=["zero_shot", "zero_shot_cot"], help="method")
+    parser.add_argument("--model_name", type=str, default="gpt-3.5-turbo-1106", choices=["gpt-3.5-turbo-1106", "gpt-4-1106-preview"], help="model_name")
+    args = parser.parse_args()
+    args.answer_str = ""
+    if args.method == "zero_shot_cot":
+        args.answer_str = "Let us think step by step. "
+    return args
+
+
+args = parse_arguments()
 # initialize the models
 openai = OpenAI(
     #model_name="text-davinci-003",
-    model_name = "gpt-4-1106-preview",
-    openai_api_key="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"
+    model_name = args.model_name,
+    openai_api_key="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"
 )
-from langchain.prompts import PromptTemplate
+
+feature_defs = {"Price/Earnings":"""Price/Earnings (P/E) Ratio:
+- **Definition**: The P/E ratio is a valuation metric that compares a company's current share price to its per-share earnings. It is calculated by dividing the market value per share by the earnings per share (EPS).
+- **Effect on predicting stock returns**: The P/E ratio is often used to gauge if a stock is overvalued or undervalued compared to its earnings. A lower P/E might suggest a stock is undervalued, or that investors expect lower earnings growth in the future. Conversely, a higher P/E may imply overvaluation or high expectations for future growth.
+- **Preferred tendency**: Investors typically prefer a lower P/E ratio, but this can depend on the industry, growth potential, and other factors. It's also beneficial if the P/E is lower relative to the market or industry average.
+""",
+"Price/Book Value":"""Price/Book Value (P/B) Ratio:
+- **Definition**: The P/B ratio measures a company's market value relative to its book value (the value of its assets minus liabilities). It's calculated by dividing the stock price per share by the book value per share.
+- **Effect on predicting stock returns**: The P/B ratio can indicate whether a stock is undervalued or overvalued in terms of its asset base. A lower P/B may imply a stock is undervalued, while a higher P/B might indicate overvaluation.
+- **Preferred tendency**: Investors may prefer a lower P/B ratio, which could suggest that a stock is undervalued. However, the interpretation of P/B should be industry-specific, as some industries naturally have higher P/B ratios.
+""",
+"Return on Assets":"""Return on Assets (ROA):
+- **Definition**: ROA is a profitability ratio that shows how efficiently a company uses its assets to generate earnings. It's calculated by dividing net income by total assets.
+- **Effect on predicting stock returns**: Higher ROA indicates more efficient use of the company's assets to create profits, which could lead to higher stock returns.
+- **Preferred tendency**: A higher ROA is generally preferred, as it suggests the company is generating more earnings from its assets.
+""",
+"Return on Equity ":"""Return on Equity (ROE):
+- **Definition**: ROE measures a corporation's profitability by revealing how much profit a company generates with the money shareholders have invested. It's calculated by dividing net income by shareholder equity.
+- **Effect on predicting stock returns**: A higher ROE often reflects a company's ability to use equity investments effectively, which can be attractive to investors and lead to higher stock returns.
+- **Preferred tendency**: A higher ROE is usually preferred, indicating that the company is effectively using equity capital to grow profits.
+""",
+"Free Cash Flow per Share":"""Free Cash Flow per Share (FCF per Share):
+- **Definition**: FCF per share is the amount of cash a company generates after accounting for capital expenditures, relative to its total number of outstanding shares.
+- **Effect on predicting stock returns**: FCF per share indicates the company's ability to generate cash, which can be used for dividends, share buybacks, or reinvestment for growth. Investors tend to value companies with higher FCF per share.
+- **Preferred tendency**: A higher FCF per share is preferred because it suggests the company has healthy cash flow available for distribution or reinvestment into the business.
+""",
+"Price/Cash Flow":"""Price/Cash Flow (P/CF) Ratio:
+- **Definition**: The P/CF ratio is a valuation metric that compares a stock's market price to its cash flow per share. It is calculated by dividing the stock's per-share price by its operating cash flow per share.
+- **Effect on predicting stock returns**: This ratio can help assess the value placed on the company's cash flow. A lower P/CF might indicate the stock is undervalued relative to its cash generation capability.
+- **Preferred tendency**: Generally, a lower P/CF ratio is preferred, as it suggests that an investor is paying less for each dollar of cash flow generated by the company.
+"""}
 
 template1 = """I will give you some financial features like Price/Earnings  Price/Book Value  Return on Assets,   Return on Equity, and   
 Free Cash Flow per Share, .
@@ -21,996 +76,81 @@ Free Cash Flow per Share  Price/Cash Flow ), including several rows of a financi
 some features, their expected returns, and their 1-month-later expected returns. Please give me the description of the features".
 
 Context: 
-1. Price/Earnings (P/E) Ratio:
-- **Definition**: The P/E ratio is a valuation metric that compares a company's current share price to its per-share earnings. It is calculated by dividing the market value per share by the earnings per share (EPS).
-- **Effect on predicting stock returns**: The P/E ratio is often used to gauge if a stock is overvalued or undervalued compared to its earnings. A lower P/E might suggest a stock is undervalued, or that investors expect lower earnings growth in the future. Conversely, a higher P/E may imply overvaluation or high expectations for future growth.
-- **Preferred tendency**: Investors typically prefer a lower P/E ratio, but this can depend on the industry, growth potential, and other factors. It's also beneficial if the P/E is lower relative to the market or industry average.
-
-2. Price/Book Value (P/B) Ratio:
-- **Definition**: The P/B ratio measures a company's market value relative to its book value (the value of its assets minus liabilities). It's calculated by dividing the stock price per share by the book value per share.
-- **Effect on predicting stock returns**: The P/B ratio can indicate whether a stock is undervalued or overvalued in terms of its asset base. A lower P/B may imply a stock is undervalued, while a higher P/B might indicate overvaluation.
-- **Preferred tendency**: Investors may prefer a lower P/B ratio, which could suggest that a stock is undervalued. However, the interpretation of P/B should be industry-specific, as some industries naturally have higher P/B ratios.
-
-3. Return on Assets (ROA):
-- **Definition**: ROA is a profitability ratio that shows how efficiently a company uses its assets to generate earnings. It's calculated by dividing net income by total assets.
-- **Effect on predicting stock returns**: Higher ROA indicates more efficient use of the company's assets to create profits, which could lead to higher stock returns.
-- **Preferred tendency**: A higher ROA is generally preferred, as it suggests the company is generating more earnings from its assets.
-
-4. Return on Equity (ROE):
-- **Definition**: ROE measures a corporation's profitability by revealing how much profit a company generates with the money shareholders have invested. It's calculated by dividing net income by shareholder equity.
-- **Effect on predicting stock returns**: A higher ROE often reflects a company's ability to use equity investments effectively, which can be attractive to investors and lead to higher stock returns.
-- **Preferred tendency**: A higher ROE is usually preferred, indicating that the company is effectively using equity capital to grow profits.
-
-5. Free Cash Flow per Share (FCF per Share):
-- **Definition**: FCF per share is the amount of cash a company generates after accounting for capital expenditures, relative to its total number of outstanding shares.
-- **Effect on predicting stock returns**: FCF per share indicates the company's ability to generate cash, which can be used for dividends, share buybacks, or reinvestment for growth. Investors tend to value companies with higher FCF per share.
-- **Preferred tendency**: A higher FCF per share is preferred because it suggests the company has healthy cash flow available for distribution or reinvestment into the business.
-
-6. Price/Cash Flow (P/CF) Ratio:
-- **Definition**: The P/CF ratio is a valuation metric that compares a stock's market price to its cash flow per share. It is calculated by dividing the stock's per-share price by its operating cash flow per share.
-- **Effect on predicting stock returns**: This ratio can help assess the value placed on the company's cash flow. A lower P/CF might indicate the stock is undervalued relative to its cash generation capability.
-- **Preferred tendency**: Generally, a lower P/CF ratio is preferred, as it suggests that an investor is paying less for each dollar of cash flow generated by the company.
-
-It's important to note that no single financial metric can provide a complete picture of a stock's potential. Investors often use a combination of metrics to analyze a company's financial health, profitability, and potential for returns. Additionally, industry norms and economic context can significantly affect the ideal values for these ratios.
+{featuredef}
+It's important to note that no single financial metric can provide a cPrice/Earnings  Price/Book Value  Return on Assetsomplete picture of a stock's potential. Investors often use a combination of metrics to analyze a company's financial health, profitability, and potential for returns. Additionally, industry norms and economic context can significantly affect the ideal values for these ratios.
 
 Following are part of the data:
-                    Price/Earnings  Price/Book Value  Return on Assets  \
-Company Date                                                             
-AAPL    2017-02-28       16.802339          5.577686         14.294891   
-        2017-03-31       16.802339          5.577686         14.294891   
-        2017-04-30       16.365909          5.622443         14.337060   
-        2017-05-31       16.365909          5.622443         14.337060   
-        2017-06-30       16.365909          5.622443         14.337060   
-        2017-07-31       16.752174          5.893825         13.873932   
-        2017-08-31       16.752174          5.893825         13.873932   
-        2017-09-30       16.752174          5.893825         13.873932   
-        2017-10-31       17.392600          6.133904         13.693618   
-        2017-11-30       17.392600          6.133904         13.693618   
-        2017-12-31       17.392600          6.133904         13.693618   
-MSFT    2017-02-28       25.233716          7.294476         10.097177   
-        2017-03-31       25.233716          7.294476         10.097177   
-        2017-04-30       21.209231          6.057533         11.487223   
-        2017-05-31       21.209231          6.057533         11.487223   
-        2017-06-30       21.209231          6.057533         11.487223   
-        2017-07-31       22.103858          6.414744         11.437088   
-        2017-08-31       22.103858          6.414744         11.437088   
-        2017-09-30       22.103858          6.414744         11.437088   
-        2017-10-31       48.880000          8.410996          5.754734   
-        2017-11-30       48.880000          8.410996          5.754734   
-        2017-12-31       48.880000          8.410996          5.754734   
-AMZN    2017-02-28      166.831012         19.551860          3.634137   
-        2017-03-31      166.831012         19.551860          3.634137   
-        2017-04-30      245.685279         20.015549          2.514769   
-        2017-05-31      245.685279         20.015549          2.514769   
-        2017-06-30      245.685279         20.015549          2.514769   
-        2017-07-31      243.997472         18.791930          2.069143   
-        2017-08-31      243.997472         18.791930          2.069143   
-        2017-09-30      243.997472         18.791930          2.069143   
-        2017-10-31      190.405405         20.427424          2.791121   
-        2017-11-30      190.405405         20.427424          2.791121   
-        2017-12-31      190.405405         20.427424          2.791121   
-GOOGL   2017-02-28       28.649635          4.048107         12.835229   
-        2017-03-31       28.649635          4.048107         12.835229   
-        2017-04-30       33.681617          4.343991         11.621054   
-        2017-05-31       33.681617          4.343991         11.621054   
-        2017-06-30       33.681617          4.343991         11.621054   
-        2017-07-31       32.537594          4.306373         12.026302   
-        2017-08-31       32.537594          4.306373         12.026302   
-        2017-09-30       32.537594          4.306373         12.026302   
-        2017-10-31       58.652561          4.799181          6.942038   
-        2017-11-30       58.652561          4.799181          6.942038   
-        2017-12-31       58.652561          4.799181          6.942038   
-JNJ     2017-02-28       20.932773          4.771767         11.741105   
-        2017-03-31       20.932773          4.771767         11.741105   
-        2017-04-30       22.346284          4.939014         11.164612   
-        2017-05-31       22.346284          4.939014         11.164612   
-        2017-06-30       22.346284          4.939014         11.164612   
-        2017-07-31       22.571181          4.718563         10.692944   
-        2017-08-31       22.571181          4.718563         10.692944   
-        2017-09-30       22.571181          4.718563         10.692944   
-        2017-10-31      358.256410          6.230093          0.870990   
-        2017-11-30      358.256410          6.230093          0.870990   
-        2017-12-31      358.256410          6.230093          0.870990   
-V       2017-02-28       45.816363          8.139769          7.999796   
-        2017-03-31       45.816363          8.139769          7.999796   
-        2017-04-30       36.055363          8.121470          9.821142   
-        2017-05-31       36.055363          8.121470          9.821142   
-        2017-06-30       36.055363          8.121470          9.821142   
-        2017-07-31       38.922997          8.786746          9.797594   
-        2017-08-31       38.922997          8.786746          9.797594   
-        2017-09-30       38.922997          8.786746          9.797594   
-        2017-10-31       39.143122          9.214832         10.577365   
-        2017-11-30       39.143122          9.214832         10.577365   
-        2017-12-31       39.143122          9.214832         10.577365   
-PG      2017-02-28       25.568424          4.349832          8.057850   
-        2017-03-31       25.568424          4.349832          8.057850   
-        2017-04-30       23.931131          4.107199          8.167503   
-        2017-05-31       23.931131          4.107199          8.167503   
-        2017-06-30       23.931131          4.107199          8.167503   
-        2017-07-31       24.315151          4.288043          8.043066   
-        2017-08-31       24.315151          4.288043          8.043066   
-        2017-09-30       24.315151          4.288043          8.043066   
-        2017-10-31       24.541254          4.360009          8.277351   
-        2017-11-30       24.541254          4.360009          8.277351   
-        2017-12-31       24.541254          4.360009          8.277351   
-JPM     2017-02-28       13.536755          1.358073          1.018174   
-        2017-03-31       13.536755          1.358073          1.018174   
-        2017-04-30       13.511116          1.383875          1.131810   
-        2017-05-31       13.511116          1.383875          1.131810   
-        2017-06-30       13.511116          1.383875          1.131810   
-        2017-07-31       13.761653          1.426490          1.048096   
-        2017-08-31       13.761653          1.426490          1.048096   
-        2017-09-30       13.761653          1.426490          1.048096   
-        2017-10-31       16.966793          1.595216          0.660694   
-        2017-11-30       16.966793          1.595216          0.660694   
-        2017-12-31       16.966793          1.595216          0.660694   
-UNH     2017-02-28       21.003765          3.777048         17.823088   
-        2017-03-31       21.003765          3.777048         17.823088   
-        2017-04-30       22.303482          4.145648         18.528483   
-        2017-05-31       22.303482          4.145648         18.528483   
-        2017-06-30       22.303482          4.145648         18.528483   
-        2017-07-31       22.267828          4.189559         19.040388   
-        2017-08-31       22.267828          4.189559         19.040388   
-        2017-09-30       22.267828          4.189559         19.040388   
-        2017-10-31       20.586423          4.471403         18.632087   
-        2017-11-30       20.586423          4.471403         18.632087   
-        2017-12-31       20.586423          4.471403         18.632087   
-MA      2017-02-28       29.372437         21.527872         24.255257   
-        2017-03-31       29.372437         21.527872         24.255257   
-        2017-04-30       30.106594         22.144063         24.224136   
-        2017-05-31       30.106594         22.144063         24.224136   
-        2017-06-30       30.106594         22.144063         24.224136   
-        2017-07-31       32.891519         23.233773         24.170306   
-        2017-08-31       32.891519         23.233773         24.170306   
-        2017-09-30       32.891519         23.233773         24.170306   
-        2017-10-31       41.508296         29.175807         19.573043   
-        2017-11-30       41.508296         29.175807         19.573043   
-        2017-12-31       41.508296         29.175807         19.573043   
-LYV     2017-02-28     -168.722224          5.591622         -0.470839   
-        2017-03-31     -168.722224          5.591622         -0.470839   
-        2017-04-30    -1742.499917          5.856552          0.019170   
-        2017-05-31    -1742.499917          5.856552          0.019170   
-        2017-06-30    -1742.499917          5.856552          0.019170   
-        2017-07-31     2177.500000          6.531037          0.196225   
-        2017-08-31     2177.500000          6.531037          0.196225   
-        2017-09-30     2177.500000          6.531037          0.196225   
-        2017-10-31      -84.464284          7.499009         -1.368690   
-        2017-11-30      -84.464284          7.499009         -1.368690   
-        2017-12-31      -84.464284          7.499009         -1.368690   
-JLL     2017-02-28       16.987517          1.760867          4.412934   
-        2017-03-31       16.987517          1.760867          4.412934   
-        2017-04-30       18.138549          1.883892          4.427215   
-        2017-05-31       18.138549          1.883892          4.427215   
-        2017-06-30       18.138549          1.883892          4.427215   
-        2017-07-31       15.467275          1.782041          4.982653   
-        2017-08-31       15.467275          1.782041          4.982653   
-        2017-09-30       15.467275          1.782041          4.982653   
-        2017-10-31       24.723186          2.023150          3.271775   
-        2017-11-30       24.723186          2.023150          3.271775   
-        2017-12-31       24.723186          2.023150          3.271775   
-TRGP    2017-02-28      -49.486619          2.063005         -2.283774   
-        2017-03-31      -49.486619          2.063005         -2.283774   
-        2017-04-30      -65.548942          1.508152         -1.658339   
-        2017-05-31      -65.548942          1.508152         -1.658339   
-        2017-06-30      -65.548942          1.508152         -1.658339   
-        2017-07-31      -84.363654          1.701095         -2.809946   
-        2017-08-31      -84.363654          1.701095         -2.809946   
-        2017-09-30      -84.363654          1.701095         -2.809946   
-        2017-10-31       75.249204          1.710078          0.389249   
-        2017-11-30       75.249204          1.710078          0.389249   
-        2017-12-31       75.249204          1.710078          0.389249   
-FTI     2017-02-28       24.655647          1.421767          3.154216   
-        2017-03-31       24.655647          1.421767          3.154216   
-        2017-04-30       38.866037          1.213036          1.668877   
-        2017-05-31       38.866037          1.213036          1.668877   
-        2017-06-30       38.866037          1.213036          1.668877   
-        2017-07-31       28.777679          1.190302          2.093559   
-        2017-08-31       28.777679          1.190302          2.093559   
-        2017-09-30       28.777679          1.190302          2.093559   
-        2017-10-31       15.127826          1.359796          4.816927   
-        2017-11-30       15.127826          1.359796          4.816927   
-        2017-12-31       15.127826          1.359796          4.816927   
-OKE     2017-02-28       33.305299         49.049793          2.262069   
-        2017-03-31       33.305299         49.049793          2.262069   
-        2017-04-30       32.710398          3.665305          2.108425   
-        2017-05-31       32.710398          3.665305          2.108425   
-        2017-06-30       32.710398          3.665305          2.108425   
-        2017-07-31       34.748526          3.941977          2.538239   
-        2017-08-31       34.748526          3.941977          2.538239   
-        2017-09-30       34.748526          3.941977          2.538239   
-        2017-10-31       40.187970          3.758449          2.351643   
-        2017-11-30       40.187970          3.758449          2.351643   
-        2017-12-31       40.187970          3.758449          2.351643   
-SON     2017-02-28       19.159335          3.317726          6.803570   
-        2017-03-31       19.159335          3.317726          6.803570   
-        2017-04-30       19.475060          3.082976          6.469807   
-        2017-05-31       19.475060          3.082976          6.469807   
-        2017-06-30       19.475060          3.082976          6.469807   
-        2017-07-31       18.523958          2.894993          6.374213   
-        2017-08-31       18.523958          2.894993          6.374213   
-        2017-09-30       18.523958          2.894993          6.374213   
-        2017-10-31       30.550765          3.094702          4.135045   
-        2017-11-30       30.550765          3.094702          4.135045   
-        2017-12-31       30.550765          3.094702          4.135045   
-DVN     2017-02-28      133.035714          3.393862          0.642676   
-        2017-03-31      133.035714          3.393862          0.642676   
-        2017-04-30        8.510582          2.437487          7.236672   
-        2017-05-31        8.510582          2.437487          7.236672   
-        2017-06-30        8.510582          2.437487          7.236672   
-        2017-07-31       16.411838          2.703429          4.288972   
-        2017-08-31       16.411838          2.703429          4.288972   
-        2017-09-30       16.411838          2.703429          4.288972   
-        2017-10-31       18.871365          2.348714          3.408242   
-        2017-11-30       18.871365          2.348714          3.408242   
-        2017-12-31       18.871365          2.348714          3.408242   
-
-                    Return on Equity   Free Cash Flow per Share  \
-Company Date                                                      
-AAPL    2017-02-28          34.573352                  2.529797   
-        2017-03-31          34.573352                  2.529797   
-        2017-04-30          36.028668                  2.485861   
-        2017-05-31          36.028668                  2.485861   
-        2017-06-30          36.028668                  2.485861   
-        2017-07-31          36.867508                  2.466777   
-        2017-08-31          36.867508                  2.466777   
-        2017-09-30          36.867508                  2.466777   
-        2017-10-31          37.070461                  2.564472   
-        2017-11-30          37.070461                  2.564472   
-        2017-12-31          37.070461                  2.564472   
-MSFT    2017-02-28          28.424949                  3.643287   
-        2017-03-31          28.424949                  3.643287   
-        2017-04-30          31.919503                  4.019728   
-        2017-05-31          31.919503                  4.019728   
-        2017-06-30          31.919503                  4.019728   
-        2017-07-31          32.993582                  4.141557   
-        2017-08-31          32.993582                  4.141557   
-        2017-09-30          32.993582                  4.141557   
-        2017-10-31          18.793360                  4.316991   
-        2017-11-30          18.793360                  4.316991   
-        2017-12-31          18.793360                  4.316991   
-AMZN    2017-02-28          14.175130                  0.978980   
-        2017-03-31          14.175130                  0.978980   
-        2017-04-30           9.669954                  0.839431   
-        2017-05-31           9.669954                  0.839431   
-        2017-06-30           9.669954                  0.839431   
-        2017-07-31           9.076343                  0.780769   
-        2017-08-31           9.076343                  0.780769   
-        2017-09-30           9.076343                  0.780769   
-        2017-10-31          12.908031                  0.653125   
-        2017-11-30          12.908031                  0.653125   
-        2017-12-31          12.908031                  0.653125   
-GOOGL   2017-02-28          15.415726                  1.968133   
-        2017-03-31          15.415726                  1.968133   
-        2017-04-30          14.009016                  1.791677   
-        2017-05-31          14.009016                  1.791677   
-        2017-06-30          14.009016                  1.791677   
-        2017-07-31          14.433230                  1.725199   
-        2017-08-31          14.433230                  1.725199   
-        2017-09-30          14.433230                  1.725199   
-        2017-10-31           8.686346                  1.720909   
-        2017-11-30           8.686346                  1.720909   
-        2017-12-31           8.686346                  1.720909   
-JNJ     2017-02-28          23.085853                  5.933563   
-        2017-03-31          23.085853                  5.933563   
-        2017-04-30          22.625437                  6.427138   
-        2017-05-31          22.625437                  6.427138   
-        2017-06-30          22.625437                  6.427138   
-        2017-07-31          21.570311                  6.747270   
-        2017-08-31          21.570311                  6.747270   
-        2017-09-30          21.570311                  6.747270   
-        2017-10-31           1.991147                  6.621103   
-        2017-11-30           1.991147                  6.621103   
-        2017-12-31           1.991147                  6.621103   
-V       2017-02-28          15.695831                  2.106816   
-        2017-03-31          15.695831                  2.106816   
-        2017-04-30          19.388306                  3.454927   
-        2017-05-31          19.388306                  3.454927   
-        2017-06-30          19.388306                  3.454927   
-        2017-07-31          19.694847                  3.589949   
-        2017-08-31          19.694847                  3.589949   
-        2017-09-30          19.694847                  3.589949   
-        2017-10-31          21.198581                  3.733532   
-        2017-11-30          21.198581                  3.733532   
-        2017-12-31          21.198581                  3.733532   
-PG      2017-02-28          17.509091                  3.579006   
-        2017-03-31          17.509091                  3.579006   
-        2017-04-30          17.967563                  3.475664   
-        2017-05-31          17.967563                  3.475664   
-        2017-06-30          17.967563                  3.475664   
-        2017-07-31          17.916519                  3.540846   
-        2017-08-31          17.916519                  3.540846   
-        2017-09-30          17.916519                  3.540846   
-        2017-10-31          18.820214                  3.816302   
-        2017-11-30          18.820214                  3.816302   
-        2017-12-31          18.820214                  3.816302   
-JPM     2017-02-28          10.163494                 51.130321   
-        2017-03-31          10.163494                 51.130321   
-        2017-04-30          13.023825                 52.369953   
-        2017-05-31          13.023825                 52.369953   
-        2017-06-30          13.023825                 52.369953   
-        2017-07-31          10.440082                 53.086907   
-        2017-08-31          10.440082                 53.086907   
-        2017-09-30          10.440082                 53.086907   
-        2017-10-31           6.555777                 52.918886   
-        2017-11-30           6.555777                 52.918886   
-        2017-12-31           6.555777                 52.918886   
-UNH     2017-02-28          11.618779                 14.290256   
-        2017-03-31          11.618779                 14.290256   
-        2017-04-30          12.231290                 14.640609   
-        2017-05-31          12.231290                 14.640609   
-        2017-06-30          12.231290                 14.640609   
-        2017-07-31          12.902502                 14.928210   
-        2017-08-31          12.902502                 14.928210   
-        2017-09-30          12.902502                 14.928210   
-        2017-10-31          14.457666                 13.719475   
-        2017-11-30          14.457666                 13.719475   
-        2017-12-31          14.457666                 13.719475   
-MA      2017-02-28          75.401262                  3.632163   
-        2017-03-31          75.401262                  3.632163   
-        2017-04-30          74.856703                  3.943256   
-        2017-05-31          74.856703                  3.943256   
-        2017-06-30          74.856703                  3.943256   
-        2017-07-31          72.995814                  4.225655   
-        2017-08-31          72.995814                  4.225655   
-        2017-09-30          72.995814                  4.225655   
-        2017-10-31          70.388350                  4.943556   
-        2017-11-30          70.388350                  4.943556   
-        2017-12-31          70.388350                  4.943556   
-LYV     2017-02-28          -3.018168                  3.135342   
-        2017-03-31          -3.018168                  3.135342   
-        2017-04-30           0.121401                  3.121716   
-        2017-05-31           0.121401                  3.121716   
-        2017-06-30           0.121401                  3.121716   
-        2017-07-31           1.049655                  2.947231   
-        2017-08-31           1.049655                  2.947231   
-        2017-09-30           1.049655                  2.947231   
-        2017-10-31          -8.464415                  1.850704   
-        2017-11-30          -8.464415                  1.850704   
-        2017-12-31          -8.464415                  1.850704   
-JLL     2017-02-28          10.698031                  3.738318   
-        2017-03-31          10.698031                  3.738318   
-        2017-04-30          10.933056                  5.060941   
-        2017-05-31          10.933056                  5.060941   
-        2017-06-30          10.933056                  5.060941   
-        2017-07-31          12.303290                 10.636487   
-        2017-08-31          12.303290                 10.636487   
-        2017-09-30          12.303290                 10.636487   
-        2017-10-31           9.011713                 15.083811   
-        2017-11-30           9.011713                 15.083811   
-        2017-12-31           9.011713                 15.083811   
-TRGP    2017-02-28          -5.327212                  2.078206   
-        2017-03-31          -5.327212                  2.078206   
-        2017-04-30          -3.683503                  0.304390   
-        2017-05-31          -3.683503                  0.304390   
-        2017-06-30          -3.683503                  0.304390   
-        2017-07-31          -6.498547                 -0.904917   
-        2017-08-31          -6.498547                 -0.904917   
-        2017-09-30          -6.498547                 -0.904917   
-        2017-10-31           0.910614                 -1.482840   
-        2017-11-30           0.910614                 -1.482840   
-        2017-12-31           0.910614                 -1.482840   
-FTI     2017-02-28           5.833605                  3.517905   
-        2017-03-31           5.833605                  3.517905   
-        2017-04-30           3.214794                  2.037062   
-        2017-05-31           3.214794                  2.037062   
-        2017-06-30           3.214794                  2.037062   
-        2017-07-31           4.078283                  3.175038   
-        2017-08-31           4.078283                  3.175038   
-        2017-09-30           4.078283                  3.175038   
-        2017-10-31           8.999349                  3.071514   
-        2017-11-30           8.999349                  3.071514   
-        2017-12-31           8.999349                  3.071514   
-OKE     2017-02-28         135.950273                  4.203828   
-        2017-03-31         135.950273                  4.203828   
-        2017-04-30          12.136911                  4.704848   
-        2017-05-31          12.136911                  4.704848   
-        2017-06-30          12.136911                  4.704848   
-        2017-07-31          14.912543                  2.432451   
-        2017-08-31          14.912543                  2.432451   
-        2017-09-30          14.912543                  2.432451   
-        2017-10-31          13.568911                  2.143322   
-        2017-11-30          13.568911                  2.143322   
-        2017-12-31          13.568911                  2.143322   
-SON     2017-02-28          17.799758                  2.077075   
-        2017-03-31          17.799758                  2.077075   
-        2017-04-30          16.639803                  1.281035   
-        2017-05-31          16.639803                  1.281035   
-        2017-06-30          16.639803                  1.281035   
-        2017-07-31          16.645194                  1.406390   
-        2017-08-31          16.645194                  1.406390   
-        2017-09-30          16.645194                  1.406390   
-        2017-10-31          10.825690                  1.569058   
-        2017-11-30          10.825690                  1.569058   
-        2017-12-31          10.825690                  1.569058   
-DVN     2017-02-28           2.733768                  0.203065   
-        2017-03-31           2.733768                  0.203065   
-        2017-04-30          33.304955                  0.946463   
-        2017-05-31          33.304955                  0.946463   
-        2017-06-30          33.304955                  0.946463   
-        2017-07-31          17.981340                  0.422562   
-        2017-08-31          17.981340                  0.422562   
-        2017-09-30          17.981340                  0.422562   
-        2017-10-31          11.455956                  0.371429   
-        2017-11-30          11.455956                  0.371429   
-        2017-12-31          11.455956                  0.371429   
-
-                    Price/Cash Flow  Dividend Yield (%)  \
-Company Date                                              
-AAPL    2017-02-28        11.394415            1.587081   
-        2017-03-31        11.394415            1.587081   
-        2017-04-30        11.667263            1.624774   
-        2017-05-31        11.667263            1.624774   
-        2017-06-30        11.667263            1.624774   
-        2017-07-31        12.561623            1.557228   
-        2017-08-31        12.561623            1.557228   
-        2017-09-30        12.561623            1.557228   
-        2017-10-31        13.462671            1.453643   
-        2017-11-30        13.462671            1.453643   
-        2017-12-31        13.462671            1.453643   
-MSFT    2017-02-28        13.919931            2.323110   
-        2017-03-31        13.919931            2.323110   
-        2017-04-30        13.619550            2.263166   
-        2017-05-31        13.619550            2.263166   
-        2017-06-30        13.619550            2.263166   
-        2017-07-31        14.380601            2.134515   
-        2017-08-31        14.380601            2.134515   
-        2017-09-30        14.380601            2.134515   
-        2017-10-31        15.710181            1.893851   
-        2017-11-30        15.710181            1.893851   
-        2017-12-31        15.710181            1.893851   
-AMZN    2017-02-28        25.533686            2.330237   
-        2017-03-31        25.533686            2.330237   
-        2017-04-30        27.421465            2.330237   
-        2017-05-31        27.421465            2.330237   
-        2017-06-30        27.421465            2.330237   
-        2017-07-31        28.366200            2.330237   
-        2017-08-31        28.366200            2.330237   
-        2017-09-30        28.366200            2.330237   
-        2017-10-31        31.466698            2.330237   
-        2017-11-30        31.466698            2.330237   
-        2017-12-31        31.466698            2.330237   
-GOOGL   2017-02-28        15.693353            2.330237   
-        2017-03-31        15.693353            2.330237   
-        2017-04-30        18.062710            2.330237   
-        2017-05-31        18.062710            2.330237   
-        2017-06-30        18.062710            2.330237   
-        2017-07-31        18.909989            2.330237   
-        2017-08-31        18.909989            2.330237   
-        2017-09-30        18.909989            2.330237   
-        2017-10-31        19.727046            2.330237   
-        2017-11-30        19.727046            2.330237   
-        2017-12-31        19.727046            2.330237   
-JNJ     2017-02-28        17.601610            2.569249   
-        2017-03-31        17.601610            2.569249   
-        2017-04-30        17.521283            2.449165   
-        2017-05-31        17.521283            2.449165   
-        2017-06-30        17.521283            2.449165   
-        2017-07-31        16.475115            2.522883   
-        2017-08-31        16.475115            2.522883   
-        2017-09-30        16.475115            2.522883   
-        2017-10-31        17.816025            2.376181   
-        2017-11-30        17.816025            2.376181   
-        2017-12-31        17.816025            2.376181   
-V       2017-02-28        37.784276            0.686396   
-        2017-03-31        37.784276            0.686396   
-        2017-04-30        25.150714            0.677117   
-        2017-05-31        25.150714            0.677117   
-        2017-06-30        25.150714            0.677117   
-        2017-07-31        27.064327            0.627138   
-        2017-08-31        27.064327            0.627138   
-        2017-09-30        27.064327            0.627138   
-        2017-10-31        28.354371            0.605157   
-        2017-11-30        28.354371            0.605157   
-        2017-12-31        28.354371            0.605157   
-PG      2017-02-28        18.410268            2.980523   
-        2017-03-31        18.410268            2.980523   
-        2017-04-30        18.420884            3.095927   
-        2017-05-31        18.420884            3.095927   
-        2017-06-30        18.420884            3.095927   
-        2017-07-31        18.324035            2.987690   
-        2017-08-31        18.324035            2.987690   
-        2017-09-30        18.324035            2.987690   
-        2017-10-31        17.466556            2.980300   
-        2017-11-30        17.466556            2.980300   
-        2017-12-31        17.466556            2.980300   
-JPM     2017-02-28        16.480941            2.208561   
-        2017-03-31        16.480941            2.208561   
-        2017-04-30        16.480941            2.144420   
-        2017-05-31        16.480941            2.144420   
-        2017-06-30        16.480941            2.144420   
-        2017-07-31        16.480941            2.135902   
-        2017-08-31        16.480941            2.135902   
-        2017-09-30        16.480941            2.135902   
-        2017-10-31        16.480941            1.982420   
-        2017-11-30        16.480941            1.982420   
-        2017-12-31        16.480941            1.982420   
-UNH     2017-02-28        16.480941            1.524297   
-        2017-03-31        16.480941            1.524297   
-        2017-04-30        16.480941            1.415705   
-        2017-05-31        16.480941            1.415705   
-        2017-06-30        16.480941            1.415705   
-        2017-07-31        16.480941            1.404136   
-        2017-08-31        16.480941            1.404136   
-        2017-09-30        16.480941            1.404136   
-        2017-10-31        16.480941            1.304091   
-        2017-11-30        16.480941            1.304091   
-        2017-12-31        16.480941            1.304091   
-MA      2017-02-28        29.168873            0.729083   
-        2017-03-31        29.168873            0.729083   
-        2017-04-30        29.227390            0.699876   
-        2017-05-31        29.227390            0.699876   
-        2017-06-30        29.227390            0.699876   
-        2017-07-31        31.508901            0.623229   
-        2017-08-31        31.508901            0.623229   
-        2017-09-30        31.508901            0.623229   
-        2017-10-31        28.964119            0.601216   
-        2017-11-30        28.964119            0.601216   
-        2017-12-31        28.964119            0.601216   
-LYV     2017-02-28         7.358895            2.330237   
-        2017-03-31         7.358895            2.330237   
-        2017-04-30         8.363429            2.330237   
-        2017-05-31         8.363429            2.330237   
-        2017-06-30         8.363429            2.330237   
-        2017-07-31        10.842803            2.330237   
-        2017-08-31        10.842803            2.330237   
-        2017-09-30        10.842803            2.330237   
-        2017-10-31        14.206065            2.330237   
-        2017-11-30        14.206065            2.330237   
-        2017-12-31        14.206065            2.330237   
-JLL     2017-02-28        13.157724            0.574249   
-        2017-03-31        13.157724            0.574249   
-        2017-04-30        11.196928            0.544000   
-        2017-05-31        11.196928            0.544000   
-        2017-06-30        11.196928            0.544000   
-        2017-07-31         8.042685            0.550607   
-        2017-08-31         8.042685            0.550607   
-        2017-09-30         8.042685            0.550607   
-        2017-10-31         8.101093            0.483449   
-        2017-11-30         8.101093            0.483449   
-        2017-12-31         8.101093            0.483449   
-TRGP    2017-02-28        12.558833            6.076795   
-        2017-03-31        12.558833            6.076795   
-        2017-04-30        10.973472            8.053097   
-        2017-05-31        10.973472            8.053097   
-        2017-06-30        10.973472            8.053097   
-        2017-07-31        12.611773            7.695560   
-        2017-08-31        12.611773            7.695560   
-        2017-09-30        12.611773            7.695560   
-        2017-10-31        12.442758            7.517555   
-        2017-11-30        12.442758            7.517555   
-        2017-12-31        12.442758            7.517555   
-FTI     2017-02-28         9.787070            2.330237   
-        2017-03-31         9.787070            2.330237   
-        2017-04-30        12.496885            2.330237   
-        2017-05-31        12.496885            2.330237   
-        2017-06-30        12.496885            2.330237   
-        2017-07-31         9.176189            2.330237   
-        2017-08-31         9.176189            2.330237   
-        2017-09-30         9.176189            2.330237   
-        2017-10-31        10.954400            2.330237   
-        2017-11-30        10.954400            2.330237   
-        2017-12-31        10.954400            2.330237   
-OKE     2017-02-28         8.229929            4.437229   
-        2017-03-31         8.229929            4.437229   
-        2017-04-30         7.474269            4.716258   
-        2017-05-31         7.474269            4.716258   
-        2017-06-30         7.474269            4.716258   
-        2017-07-31        15.216642            4.674247   
-        2017-08-31        15.216642            4.674247   
-        2017-09-30        15.216642            4.674247   
-        2017-10-31        15.431561            5.088868   
-        2017-11-30        15.431561            5.088868   
-        2017-12-31        15.431561            5.088868   
-SON     2017-02-28        13.370016            2.796674   
-        2017-03-31        13.370016            2.796674   
-        2017-04-30        16.398787            2.917153   
-        2017-05-31        16.398787            2.917153   
-        2017-06-30        16.398787            2.917153   
-        2017-07-31        15.345620            3.012884   
-        2017-08-31        15.345620            3.012884   
-        2017-09-30        15.345620            3.012884   
-        2017-10-31        15.495797            2.898005   
-        2017-11-30        15.495797            2.898005   
-        2017-12-31        15.495797            2.898005   
-DVN     2017-02-28         9.966975            0.575264   
-        2017-03-31         9.966975            0.575264   
-        2017-04-30         7.701663            0.750704   
-        2017-05-31         7.701663            0.750704   
-        2017-06-30         7.701663            0.750704   
-        2017-07-31         9.866048            0.653773   
-        2017-08-31         9.866048            0.653773   
-        2017-09-30         9.866048            0.653773   
-        2017-10-31         9.839294            0.579710   
-        2017-11-30         9.839294            0.579710   
-        2017-12-31         9.839294            0.579710   
-
-                    Enterprise Value/EBIT  Enterprise Value/EBITDA  \
-Company Date                                                         
-AAPL    2017-02-28              13.528843                11.460966   
-        2017-03-31              13.528843                11.460966   
-        2017-04-30              13.365687                11.365237   
-        2017-05-31              13.365687                11.365237   
-        2017-06-30              13.365687                11.365237   
-        2017-07-31              13.852687                11.847960   
-        2017-08-31              13.852687                11.847960   
-        2017-09-30              13.852687                11.847960   
-        2017-10-31              14.325738                12.382731   
-        2017-11-30              14.325738                12.382731   
-        2017-12-31              14.325738                12.382731   
-MSFT    2017-02-28              18.770298                14.066450   
-        2017-03-31              18.770298                14.066450   
-        2017-04-30              16.925161                12.969016   
-        2017-05-31              16.925161                12.969016   
-        2017-06-30              16.925161                12.969016   
-        2017-07-31              17.668577                13.403577   
-        2017-08-31              17.668577                13.403577   
-        2017-09-30              17.668577                13.403577   
-        2017-10-31              19.878268                15.051930   
-        2017-11-30              19.878268                15.051930   
-        2017-12-31              19.878268                15.051930   
-AMZN    2017-02-28              98.710182                34.146535   
-        2017-03-31              98.710182                34.146535   
-        2017-04-30             128.101127                37.352564   
-        2017-05-31             128.101127                37.352564   
-        2017-06-30             128.101127                37.352564   
-        2017-07-31             140.494369                36.651636   
-        2017-08-31             140.494369                36.651636   
-        2017-09-30             140.494369                36.651636   
-        2017-10-31             133.699560                37.578819   
-        2017-11-30             133.699560                37.578819   
-        2017-12-31             133.699560                37.578819   
-GOOGL   2017-02-28              20.458518                16.266762   
-        2017-03-31              20.458518                16.266762   
-        2017-04-30              21.847412                17.434704   
-        2017-05-31              21.847412                17.434704   
-        2017-06-30              21.847412                17.434704   
-        2017-07-31              20.996054                16.960924   
-        2017-08-31              20.996054                16.960924   
-        2017-09-30              20.996054                16.960924   
-        2017-10-31              21.823085                17.627271   
-        2017-11-30              21.823085                17.627271   
-        2017-12-31              21.823085                17.627271   
-JNJ     2017-02-28              15.287344                13.004071   
-        2017-03-31              15.287344                13.004071   
-        2017-04-30              17.715973                14.897745   
-        2017-05-31              17.715973                14.897745   
-        2017-06-30              17.715973                14.897745   
-        2017-07-31              17.779955                14.417045   
-        2017-08-31              17.779955                14.417045   
-        2017-09-30              17.779955                14.417045   
-        2017-10-31              20.247858                15.670448   
-        2017-11-30              20.247858                15.670448   
-        2017-12-31              20.247858                15.670448   
-V       2017-02-28              19.566676                18.663547   
-        2017-03-31              19.566676                18.663547   
-        2017-04-30              19.233977                18.369352   
-        2017-05-31              19.233977                18.369352   
-        2017-06-30              19.233977                18.369352   
-        2017-07-31              20.449086                19.555172   
-        2017-08-31              20.449086                19.555172   
-        2017-09-30              20.449086                19.555172   
-        2017-10-31              21.574718                20.648657   
-        2017-11-30              21.574718                20.648657   
-        2017-12-31              21.574718                20.648657   
-PG      2017-02-28              17.133038                14.280331   
-        2017-03-31              17.133038                14.280331   
-        2017-04-30              16.525267                13.862789   
-        2017-05-31              16.525267                13.862789   
-        2017-06-30              16.525267                13.862789   
-        2017-07-31              17.268981                14.489330   
-        2017-08-31              17.268981                14.489330   
-        2017-09-30              17.268981                14.489330   
-        2017-10-31              17.334512                14.576339   
-        2017-11-30              17.334512                14.576339   
-        2017-12-31              17.334512                14.576339   
-JPM     2017-02-28              32.353187                15.751778   
-        2017-03-31              32.353187                15.751778   
-        2017-04-30              32.353187                15.751778   
-        2017-05-31              32.353187                15.751778   
-        2017-06-30              32.353187                15.751778   
-        2017-07-31              32.353187                15.751778   
-        2017-08-31              32.353187                15.751778   
-        2017-09-30              32.353187                15.751778   
-        2017-10-31              32.353187                15.751778   
-        2017-11-30              32.353187                15.751778   
-        2017-12-31              32.353187                15.751778   
-UNH     2017-02-28              32.353187                15.751778   
-        2017-03-31              32.353187                15.751778   
-        2017-04-30              32.353187                15.751778   
-        2017-05-31              32.353187                15.751778   
-        2017-06-30              32.353187                15.751778   
-        2017-07-31              32.353187                15.751778   
-        2017-08-31              32.353187                15.751778   
-        2017-09-30              32.353187                15.751778   
-        2017-10-31              32.353187                15.751778   
-        2017-11-30              32.353187                15.751778   
-        2017-12-31              32.353187                15.751778   
-MA      2017-02-28              19.515200                18.388386   
-        2017-03-31              19.515200                18.388386   
-        2017-04-30              20.499381                19.295725   
-        2017-05-31              20.499381                19.295725   
-        2017-06-30              20.499381                19.295725   
-        2017-07-31              22.586006                21.239971   
-        2017-08-31              22.586006                21.239971   
-        2017-09-30              22.586006                21.239971   
-        2017-10-31              22.783753                21.425761   
-        2017-11-30              22.783753                21.425761   
-        2017-12-31              22.783753                21.425761   
-LYV     2017-02-28              33.434892                11.205016   
-        2017-03-31              33.434892                11.205016   
-        2017-04-30              31.955133                12.262120   
-        2017-05-31              31.955133                12.262120   
-        2017-06-30              31.955133                12.262120   
-        2017-07-31              39.571663                15.936500   
-        2017-08-31              39.571663                15.936500   
-        2017-09-30              39.571663                15.936500   
-        2017-10-31             108.456219                20.318296   
-        2017-11-30             108.456219                20.318296   
-        2017-12-31             108.456219                20.318296   
-JLL     2017-02-28              32.353187                 9.851612   
-        2017-03-31              32.353187                 9.851612   
-        2017-04-30              32.353187                11.033093   
-        2017-05-31              32.353187                11.033093   
-        2017-06-30              32.353187                11.033093   
-        2017-07-31              32.353187                 9.292910   
-        2017-08-31              32.353187                 9.292910   
-        2017-09-30              32.353187                 9.292910   
-        2017-10-31              32.353187                 9.771743   
-        2017-11-30              32.353187                 9.771743   
-        2017-12-31              32.353187                 9.771743   
-TRGP    2017-02-28              68.131195                16.914866   
-        2017-03-31              68.131195                16.914866   
-        2017-04-30              63.094719                14.630840   
-        2017-05-31              63.094719                14.630840   
-        2017-06-30              63.094719                14.630840   
-        2017-07-31              63.440478                15.049065   
-        2017-08-31              63.440478                15.049065   
-        2017-09-30              63.440478                15.049065   
-        2017-10-31              50.418561                14.292365   
-        2017-11-30              50.418561                14.292365   
-        2017-12-31              50.418561                14.292365   
-FTI     2017-02-28              16.015373                11.441730   
-        2017-03-31              16.015373                11.441730   
-        2017-04-30              15.880517                10.944132   
-        2017-05-31              15.880517                10.944132   
-        2017-06-30              15.880517                10.944132   
-        2017-07-31              13.673134                 9.829259   
-        2017-08-31              13.673134                 9.829259   
-        2017-09-30              13.673134                 9.829259   
-        2017-10-31              12.029738                 9.436498   
-        2017-11-30              12.029738                 9.436498   
-        2017-12-31              12.029738                 9.436498   
-OKE     2017-02-28              18.854909                14.409458   
-        2017-03-31              18.854909                14.409458   
-        2017-04-30              22.341584                17.131974   
-        2017-05-31              22.341584                17.131974   
-        2017-06-30              22.341584                17.131974   
-        2017-07-31              22.358563                17.299957   
-        2017-08-31              22.358563                17.299957   
-        2017-09-30              22.358563                17.299957   
-        2017-10-31              20.397922                15.986414   
-        2017-11-30              20.397922                15.986414   
-        2017-12-31              20.397922                15.986414   
-SON     2017-02-28              14.599324                 9.978156   
-        2017-03-31              14.599324                 9.978156   
-        2017-04-30              14.579680                 9.881939   
-        2017-05-31              14.579680                 9.881939   
-        2017-06-30              14.579680                 9.881939   
-        2017-07-31              14.288133                 9.671596   
-        2017-08-31              14.288133                 9.671596   
-        2017-09-30              14.288133                 9.671596   
-        2017-10-31              14.094198                 9.574797   
-        2017-11-30              14.094198                 9.574797   
-        2017-12-31              14.094198                 9.574797   
-DVN     2017-02-28              27.685879                11.481524   
-        2017-03-31              27.685879                11.481524   
-        2017-04-30              24.736318                10.306799   
-        2017-05-31              24.736318                10.306799   
-        2017-06-30              24.736318                10.306799   
-        2017-07-31              31.292942                11.788676   
-        2017-08-31              31.292942                11.788676   
-        2017-09-30              31.292942                11.788676   
-        2017-10-31              33.415777                12.461148   
-        2017-11-30              33.415777                12.461148   
-        2017-12-31              33.415777                12.461148   
-
-                    Dividend Payout Ratio (%)    Return  
-Company Date                                             
-AAPL    2017-02-28                  26.666667  0.128883  
-        2017-03-31                  26.666667  0.048690  
-        2017-04-30                  26.590909 -0.000070  
-        2017-05-31                  26.590909  0.063418  
-        2017-06-30                  26.590909 -0.057214  
-        2017-07-31                  26.086957  0.032704  
-        2017-08-31                  26.086957  0.102669  
-        2017-09-30                  26.086957 -0.060244  
-        2017-10-31                  25.282631  0.096808  
-        2017-11-30                  25.282631  0.016623  
-        2017-12-31                  25.282631 -0.015246  
-MSFT    2017-02-28                  58.620690 -0.010364  
-        2017-03-31                  58.620690  0.029384  
-        2017-04-30                  48.000000  0.039478  
-        2017-05-31                  48.000000  0.020158  
-        2017-06-30                  48.000000 -0.013030  
-        2017-07-31                  47.181009  0.054693  
-        2017-08-31                  47.181009  0.028473  
-        2017-09-30                  47.181009 -0.003745  
-        2017-10-31                  92.571429  0.116660  
-        2017-11-30                  92.571429  0.011902  
-        2017-12-31                  92.571429  0.016277  
-AMZN    2017-02-28                  80.358732  0.026182  
-        2017-03-31                  80.358732  0.049110  
-        2017-04-30                  80.358732  0.043371  
-        2017-05-31                  80.358732  0.075276  
-        2017-06-30                  80.358732 -0.026764  
-        2017-07-31                  80.358732  0.020434  
-        2017-08-31                  80.358732 -0.007269  
-        2017-09-30                  80.358732 -0.019631  
-        2017-10-31                  80.358732  0.149717  
-        2017-11-30                  80.358732  0.064662  
-        2017-12-31                  80.358732 -0.006187  
-GOOGL   2017-02-28                  80.358732  0.030164  
-        2017-03-31                  80.358732  0.003397  
-        2017-04-30                  80.358732  0.090493  
-        2017-05-31                  80.358732  0.067678  
-        2017-06-30                  80.358732 -0.058161  
-        2017-07-31                  80.358732  0.017017  
-        2017-08-31                  80.358732  0.010301  
-        2017-09-30                  80.358732  0.019346  
-        2017-10-31                  80.358732  0.060921  
-        2017-11-30                  80.358732  0.003030  
-        2017-12-31                  80.358732  0.016629  
-JNJ     2017-02-28                  53.781513  0.079117  
-        2017-03-31                  53.781513  0.019147  
-        2017-04-30                  54.729730 -0.008671  
-        2017-05-31                  54.729730  0.038714  
-        2017-06-30                  54.729730  0.031501  
-        2017-07-31                  56.944444  0.003250  
-        2017-08-31                  56.944444 -0.002637  
-        2017-09-30                  56.944444 -0.017829  
-        2017-10-31                 851.282051  0.072302  
-        2017-11-30                 851.282051 -0.000574  
-        2017-12-31                 851.282051  0.002799  
-V       2017-02-28                  31.448162  0.063233  
-        2017-03-31                  31.448162  0.010575  
-        2017-04-30                  24.413687  0.026443  
-        2017-05-31                  24.413687  0.043960  
-        2017-06-30                  24.413687 -0.015226  
-        2017-07-31                  24.410090  0.061634  
-        2017-08-31                  24.410090  0.039775  
-        2017-09-30                  24.410090  0.016615  
-        2017-10-31                  23.687734  0.045040  
-        2017-11-30                  23.687734  0.023732  
-        2017-12-31                  23.687734  0.012701  
-PG      2017-02-28                  76.207279  0.039612  
-        2017-03-31                  76.207279 -0.013396  
-        2017-04-30                  74.089024 -0.028047  
-        2017-05-31                  74.089024  0.008703  
-        2017-06-30                  74.089024 -0.010671  
-        2017-07-31                  72.646123  0.042111  
-        2017-08-31                  72.646123  0.015966  
-        2017-09-30                  72.646123 -0.013981  
-        2017-10-31                  73.140308 -0.051000  
-        2017-11-30                  73.140308  0.042275  
-        2017-12-31                  73.140308  0.021002  
-JPM     2017-02-28                  29.896748  0.070779  
-        2017-03-31                  29.896748 -0.030678  
-        2017-04-30                  28.973510 -0.009563  
-        2017-05-31                  28.973510 -0.055747  
-        2017-06-30                  28.973510  0.112599  
-        2017-07-31                  29.393542  0.004376  
-        2017-08-31                  29.393542 -0.009913  
-        2017-09-30                  29.393542  0.050831  
-        2017-10-31                  33.635311  0.053398  
-        2017-11-30                  33.635311  0.038863  
-        2017-12-31                  33.635311  0.023154  
-UNH     2017-02-28                  32.015982  0.020234  
-        2017-03-31                  32.015982 -0.008284  
-        2017-04-30                  31.575149  0.066277  
-        2017-05-31                  31.575149  0.001715  
-        2017-06-30                  31.575149  0.058454  
-        2017-07-31                  31.267055  0.034462  
-        2017-08-31                  31.267055  0.036964  
-        2017-09-30                  31.267055 -0.015334  
-        2017-10-31                  26.846578  0.073372  
-        2017-11-30                  26.846578  0.085387  
-        2017-12-31                  26.846578 -0.033791  
-MA      2017-02-28                  21.414954  0.038841  
-        2017-03-31                  21.414954  0.018197  
-        2017-04-30                  21.070897  0.034231  
-        2017-05-31                  21.070897  0.056396  
-        2017-06-30                  21.070897 -0.011637  
-        2017-07-31                  20.498963  0.052285  
-        2017-08-31                  20.498963  0.043036  
-        2017-09-30                  20.498963  0.059265  
-        2017-10-31                  24.955437  0.053612  
-        2017-11-30                  24.955437  0.011427  
-        2017-12-31                  24.955437  0.005915  
-LYV     2017-02-28                  80.358732 -0.007338  
-        2017-03-31                  80.358732  0.068990  
-        2017-04-30                  80.358732  0.058940  
-        2017-05-31                  80.358732  0.072450  
-        2017-06-30                  80.358732  0.010438  
-        2017-07-31                  80.358732  0.069441  
-        2017-08-31                  80.358732  0.072176  
-        2017-09-30                  80.358732  0.089840  
-        2017-10-31                  80.358732  0.005281  
-        2017-11-30                  80.358732  0.036546  
-        2017-12-31                  80.358732 -0.061922  
-JLL     2017-02-28                   9.755057  0.113268  
-        2017-03-31                   9.755057 -0.028335  
-        2017-04-30                   9.867371  0.030597  
-        2017-05-31                   9.867371  0.005311  
-        2017-06-30                   9.867371  0.082532  
-        2017-07-31                   8.516394  0.017760  
-        2017-08-31                   8.516394 -0.041739  
-        2017-09-30                   8.516394  0.013042  
-        2017-10-31                  11.952390  0.048502  
-        2017-11-30                  11.952390  0.177620  
-        2017-12-31                  11.952390 -0.023346  
-TRGP    2017-02-28                 236.890862 -0.019438  
-        2017-03-31                 236.890862  0.060177  
-        2017-04-30                 236.890862 -0.079633  
-        2017-05-31                 236.890862 -0.166878  
-        2017-06-30                 236.890862 -0.015894  
-        2017-07-31                 236.890862  0.026770  
-        2017-08-31                 236.890862 -0.039647  
-        2017-09-30                 236.890862  0.061252  
-        2017-10-31                 236.890862 -0.122622  
-        2017-11-30                 236.890862  0.045783  
-        2017-12-31                 236.890862  0.115668  
-FTI     2017-02-28                  80.358732 -0.038667  
-        2017-03-31                  80.358732  0.005569  
-        2017-04-30                  80.358732 -0.072923  
-        2017-05-31                  80.358732 -0.039164  
-        2017-06-30                  80.358732 -0.060449  
-        2017-07-31                  80.358732  0.049265  
-        2017-08-31                  80.358732 -0.094954  
-        2017-09-30                  80.358732  0.080914  
-        2017-10-31                  80.358732 -0.018983  
-        2017-11-30                  80.358732  0.045637  
-        2017-12-31                  80.358732  0.093226  
-OKE     2017-02-28                 147.783251 -0.019234  
-        2017-03-31                 147.783251  0.025717  
-        2017-04-30                 154.270663 -0.051046  
-        2017-05-31                 154.270663 -0.055693  
-        2017-06-30                 154.270663  0.049919  
-        2017-07-31                 162.423178  0.084548  
-        2017-08-31                 162.423178 -0.042602  
-        2017-09-30                 162.423178  0.023080  
-        2017-10-31                 204.511278 -0.020574  
-        2017-11-30                 204.511278 -0.043671  
-        2017-12-31                 204.511278  0.029865  
-SON     2017-02-28                  53.582419 -0.029663  
-        2017-03-31                  53.582419 -0.007502  
-        2017-04-30                  56.811726 -0.011527  
-        2017-05-31                  56.811726 -0.030587  
-        2017-06-30                  56.811726  0.014001  
-        2017-07-31                  55.810538 -0.057176  
-        2017-08-31                  55.810538 -0.004538  
-        2017-09-30                  55.810538  0.045379  
-        2017-10-31                  88.536277  0.026561  
-        2017-11-30                  88.536277  0.033211  
-        2017-12-31                  88.536277 -0.006915  
-DVN     2017-02-28                  76.530612 -0.047870  
-        2017-03-31                  76.530612 -0.037823  
-        2017-04-30                   6.388926 -0.053452  
-        2017-05-31                   6.388926 -0.139529  
-        2017-06-30                   6.388926 -0.059152  
-        2017-07-31                  10.729614  0.041914  
-        2017-08-31                  10.729614 -0.057340  
-        2017-09-30                  10.729614  0.169108  
-        2017-10-31                  10.939922  0.005176  
-        2017-11-30                  10.939922  0.044173  
-        2017-12-31                  10.939922  0.074487 
+{data}
 
 Question: {query}
 
-Answer: Let's think step by step """
+Answer: {answer_str}
+"""
 prompt_template = PromptTemplate(
-    input_variables=["query"],
+    input_variables=["featuredef","data","query"],
     template=template2
 )
+
+feature_def = ""
+for i,f in enumerate(args.featurenames.split(",")):
+    feature_def += str(i) + ". " + feature_defs[f] + "\n"
+
+def get_historical_returns(ticker, start_date, end_date, frequency="monthly"):
+    'Function to fetch Historical Price data and compute returns'
+    data = yf.download(ticker,start=start_date, end=end_date)
+    # Calculate Daily Returns
+    daily_data = data.copy()
+    #print("daily_data:", daily_data)
+    daily_data['Return'] = daily_data['Close'].pct_change()
+    daily_returns = daily_data[['Return']].dropna()
+    # Calculate Monthly Returns
+    monthly_data = data.copy()
+    monthly_data['Return'] = monthly_data['Close']
+    monthly_data = monthly_data['Return'].resample('M').last()
+    #print("monthly data after:", monthly_data)
+    monthly_returns = monthly_data.pct_change()
+    monthly_returns = monthly_returns.dropna()
+
+    if frequency == "daily": return daily_returns
+    if frequency == "monthly": return monthly_returns
+    return monthly_data
+def resample_quaterly_data(quaterly_data, target_data):
+    'Repeat the quaterly available ratios to same frequency as target return'
+    quaterly_data.index = pd.to_datetime(quaterly_data.index)
+    target_data.index = pd.to_datetime(target_data.index)
+    # target_data_after_1_month.index = pd.to_datetime(target_data_after_1_month.index)
+    #print(target_data.index)
+    # Resample the quaterly data to daily frequency using Forward Fill
+    quaterly_data.index = quaterly_data.index + pd.DateOffset(days=1)
+    aligned_quaterly_data = quaterly_data.reindex(target_data.index, method='ffill')
+
+    #aligned_quaterly_data = aligned_quaterly_data.dropna()
+    return aligned_quaterly_data
+def load_data(args,stock_list):
+    data_str = ""
+    for ticker in stock_list:
+        print(ticker)
+        file_path = args.path_to_file + ticker + '.xlsx'
+        sheet_name = ticker + '-US'
+        data = pd.read_excel(file_path, sheet_name=sheet_name, engine='openpyxl')
+        data = data.reset_index(drop=True)
+        data = data.set_index('Date').T
+        data.index = pd.to_datetime(data.index, format='%b \'%y')
+        data.index = data.index + pd.offsets.MonthEnd()
+        ratio_data = data.apply(pd.to_numeric)
+        for col in args.featurenames.split(","):
+             if col not in ratio_data.columns:
+                 ratio_data.loc[:, col] = 0
+        ratio_data = ratio_data[args.featurenames.split(",")]
+        ratio_data = ratio_data.apply(lambda x: x.fillna(x.mean()), axis=0)
+        returns_data = get_historical_returns(ticker, args.start_date, args.end_date)
+        adjusted_ratio_data = resample_quaterly_data(ratio_data, returns_data)
+        features = pd.concat([adjusted_ratio_data, returns_data],axis=1)
+        data_str += "data for company: " + ticker +"\n"+features.to_string() +"\n\n"
+    return data_str
+stock_list = ['AAPL','MSFT', 'AMZN', 'GOOGL', 'JNJ', 'V', 'PG', 'JPM']#, 'UNH', 'MA', 'LYV', 'JLL','TRGP','FTI', 'OKE', 'SON',  'DVN']
+data_str = load_data(args,stock_list)
+
 q1 = "Please give me the definitions of the provided features, explain their effect in predicting stock returns and the preferred tendency of the features"
 
 q2 = "Please create a new nonlinear feature based on the provided context (existing features), and this" \
@@ -1020,9 +160,31 @@ q2 = "Please create a new nonlinear feature based on the provided context (exist
               "Please also provide the calculated values of this new feature" \
               "and normalize them in the range from 0 to 1"
 
-print(openai(
+result = openai(
     prompt_template.format(
-        query = q2
+        query = q2,featuredef=feature_def,data=data_str,answer_str=args.answer_str
         # query = "can you find the function that inputs are existing features and output is the return?"
-    )
-))
+    ))
+output = {
+        'template': [template2],
+        'start_date':[args.start_date],
+        'end_date':[args.start_date],
+        'featurenames':[args.featurenames],
+        'stocks':[stock_list],
+        'answer':[result]
+        }
+print(result)
+
+outfilepath = './output/'+args.model_name+'/'+args.method + '/'
+file_name = f"out_{args.model_name}_{args.method}.csv"
+filepath = os.path.join(outfilepath, file_name)
+if not os.path.exists(outfilepath):
+    os.makedirs(outfilepath)
+if os.path.exists(filepath):
+    time_tag = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    filepath = filepath.replace(".csv", "_{}.csv".format(time_tag))
+
+df = pd.DataFrame.from_dict(output)
+df.to_csv(filepath)
+
+print("output saved to {}".format(filepath))
