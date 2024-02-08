@@ -436,7 +436,7 @@ path_to_file = "./"
 #stock_list = ['COTY', 'AR', 'EXAS', 'AMC'] #unavailable from 20130131 to 201712031: COTY,
 stock_list = ['AAPL',
               'MSFT', 'AMZN', 'GOOGL', 'JNJ', 'V', 'PG', 'JPM', 'UNH', 'MA', 'LYV', 'JLL',
-              'TRGP']# 'FTI', 'OKE', 'SON',  'DVN']
+              'TRGP', 'FTI', 'OKE', 'SON', 'DVN']
 
 
               #'FTI', 'OKE'] 'EQT', 'RRC',
