@@ -1,0 +1,268 @@
+Namespace(end_date='2015-12-31', feature_names='Price/Earnings,Price/Book Value,Return on Assets,Return on Equity ,Free Cash Flow per Share,Price/Cash Flow,Dividend Yield (%),Enterprise Value/EBIT,Enterprise Value/EBITDA,Dividend Payout Ratio (%)', new_feature='1', path_to_file='./', start_date='2015-01-31', y='Return')
+AAPL
+this is Beta adj rsquare of AAPL and the value is -0.2707729144584774:
+MSFT
+this is Beta adj rsquare of MSFT and the value is -0.11240465592733151:
+AMZN
+AMZN
+AMZN
+this is Beta adj rsquare of AMZN and the value is -0.2767220970694637:
+GOOGL
+GOOGL
+GOOGL
+this is Beta adj rsquare of GOOGL and the value is -0.12280256456702943:
+JNJ
+this is Beta adj rsquare of JNJ and the value is 0.07890638448656895:
+V
+this is Beta adj rsquare of V and the value is -0.28175277709950763:
+PG
+this is Beta adj rsquare of PG and the value is 0.16893313670049281:
+JPM
+JPM
+JPM
+JPM
+this is Beta adj rsquare of JPM and the value is 0.49920017775916226:
+UNH
+UNH
+UNH
+UNH
+this is Beta adj rsquare of UNH and the value is -0.26931344851092875:
+MA
+this is Beta adj rsquare of MA and the value is 0.023577577685801376:
+JLL
+JLL
+this is Beta adj rsquare of JLL and the value is -0.12872630835467103:
+TRGP
+this is Beta adj rsquare of TRGP and the value is -0.17028212002015852:
+FTI
+FTI
+FTI
+this is Beta adj rsquare of FTI and the value is 0.0:
+OKE
+this is Beta adj rsquare of OKE and the value is 0.04370639043915481:
+SON
+this is Beta adj rsquare of SON and the value is 0.0316990904747233:
+DVN
+this is Beta adj rsquare of DVN and the value is -1.5213606230186718:
+['AAPL', 'MSFT', 'AMZN', 'GOOGL', 'JNJ', 'V', 'PG', 'JPM', 'UNH', 'MA', 'JLL', 'TRGP', 'FTI', 'OKE', 'SON', 'DVN']
+['2014-12-31', '2015-01-31', '2015-02-28', '2015-03-31', '2015-04-30', '2015-05-31', '2015-06-30', '2015-07-31', '2015-08-31', '2015-09-30', '2015-10-31', '2015-11-30', '2015-12-31']
+date now is: 2014-12-31
+This ticker is: AAPL
+This ticker is: MSFT
+This ticker is: AMZN
+This ticker is: GOOGL
+This ticker is: JNJ
+This ticker is: V
+This ticker is: PG
+This ticker is: JPM
+This ticker is: UNH
+This ticker is: MA
+This ticker is: JLL
+This ticker is: TRGP
+This ticker is: FTI
+This ticker is: OKE
+This ticker is: SON
+This ticker is: DVN
+this is adj rsquare: 0.7631299114072823
+date now is: 2015-01-31
+This ticker is: AAPL
+This ticker is: MSFT
+This ticker is: AMZN
+This ticker is: GOOGL
+This ticker is: JNJ
+This ticker is: V
+This ticker is: PG
+This ticker is: JPM
+This ticker is: UNH
+This ticker is: MA
+This ticker is: JLL
+This ticker is: TRGP
+This ticker is: FTI
+This ticker is: OKE
+This ticker is: SON
+This ticker is: DVN
+this is adj rsquare: 0.19926757451141963
+date now is: 2015-02-28
+This ticker is: AAPL
+This ticker is: MSFT
+This ticker is: AMZN
+This ticker is: GOOGL
+This ticker is: JNJ
+This ticker is: V
+This ticker is: PG
+This ticker is: JPM
+This ticker is: UNH
+This ticker is: MA
+This ticker is: JLL
+This ticker is: TRGP
+This ticker is: FTI
+This ticker is: OKE
+This ticker is: SON
+This ticker is: DVN
+this is adj rsquare: -0.24908849254130372
+date now is: 2015-03-31
+This ticker is: AAPL
+This ticker is: MSFT
+This ticker is: AMZN
+This ticker is: GOOGL
+This ticker is: JNJ
+This ticker is: V
+This ticker is: PG
+This ticker is: JPM
+This ticker is: UNH
+This ticker is: MA
+This ticker is: JLL
+This ticker is: TRGP
+This ticker is: FTI
+This ticker is: OKE
+This ticker is: SON
+This ticker is: DVN
+this is adj rsquare: 0.128195628031476
+date now is: 2015-04-30
+This ticker is: AAPL
+This ticker is: MSFT
+This ticker is: AMZN
+This ticker is: GOOGL
+This ticker is: JNJ
+This ticker is: V
+This ticker is: PG
+This ticker is: JPM
+This ticker is: UNH
+This ticker is: MA
+This ticker is: JLL
+This ticker is: TRGP
+This ticker is: FTI
+This ticker is: OKE
+This ticker is: SON
+This ticker is: DVN
+this is adj rsquare: 0.7160871577411858
+date now is: 2015-05-31
+This ticker is: AAPL
+This ticker is: MSFT
+This ticker is: AMZN
+This ticker is: GOOGL
+This ticker is: JNJ
+This ticker is: V
+This ticker is: PG
+This ticker is: JPM
+This ticker is: UNH
+This ticker is: MA
+This ticker is: JLL
+This ticker is: TRGP
+This ticker is: FTI
+This ticker is: OKE
+This ticker is: SON
+This ticker is: DVN
+this is adj rsquare: -1.4350115157330352
+date now is: 2015-06-30
+This ticker is: AAPL
+This ticker is: MSFT
+This ticker is: AMZN
+This ticker is: GOOGL
+This ticker is: JNJ
+This ticker is: V
+This ticker is: PG
+This ticker is: JPM
+This ticker is: UNH
+This ticker is: MA
+This ticker is: JLL
+This ticker is: TRGP
+This ticker is: FTI
+This ticker is: OKE
+This ticker is: SON
+This ticker is: DVN
+this is adj rsquare: -1.4529114450092866
+date now is: 2015-07-31
+This ticker is: AAPL
+This ticker is: MSFT
+This ticker is: AMZN
+This ticker is: GOOGL
+This ticker is: JNJ
+This ticker is: V
+This ticker is: PG
+This ticker is: JPM
+This ticker is: UNH
+This ticker is: MA
+This ticker is: JLL
+This ticker is: TRGP
+This ticker is: FTI
+This ticker is: OKE
+This ticker is: SON
+This ticker is: DVN
+this is adj rsquare: 0.7456473642378705
+date now is: 2015-08-31
+This ticker is: AAPL
+This ticker is: MSFT
+This ticker is: AMZN
+This ticker is: GOOGL
+This ticker is: JNJ
+This ticker is: V
+This ticker is: PG
+This ticker is: JPM
+This ticker is: UNH
+This ticker is: MA
+This ticker is: JLL
+This ticker is: TRGP
+This ticker is: FTI
+This ticker is: OKE
+This ticker is: SON
+This ticker is: DVN
+this is adj rsquare: 0.9238629047132672
+date now is: 2015-09-30
+This ticker is: AAPL
+This ticker is: MSFT
+This ticker is: AMZN
+This ticker is: GOOGL
+This ticker is: JNJ
+This ticker is: V
+This ticker is: PG
+This ticker is: JPM
+This ticker is: UNH
+This ticker is: MA
+This ticker is: JLL
+This ticker is: TRGP
+This ticker is: FTI
+This ticker is: OKE
+This ticker is: SON
+This ticker is: DVN
+this is adj rsquare: -0.039839933797015004
+date now is: 2015-10-31
+This ticker is: AAPL
+This ticker is: MSFT
+This ticker is: AMZN
+This ticker is: GOOGL
+This ticker is: JNJ
+This ticker is: V
+This ticker is: PG
+This ticker is: JPM
+This ticker is: UNH
+This ticker is: MA
+This ticker is: JLL
+This ticker is: TRGP
+This ticker is: FTI
+This ticker is: OKE
+This ticker is: SON
+This ticker is: DVN
+this is adj rsquare: 0.7036415667869718
+date now is: 2015-11-30
+This ticker is: AAPL
+This ticker is: MSFT
+This ticker is: AMZN
+This ticker is: GOOGL
+This ticker is: JNJ
+This ticker is: V
+This ticker is: PG
+This ticker is: JPM
+This ticker is: UNH
+This ticker is: MA
+This ticker is: JLL
+This ticker is: TRGP
+This ticker is: FTI
+This ticker is: OKE
+This ticker is: SON
+This ticker is: DVN
+this is adj rsquare: 0.8138425965241805
+T-values: {'Constant': -0.4059736703778962, 'Price/Earnings': 0.12130374723291519, 'Price/Book Value': -3.220708764504949, 'Return on Assets': -4.116639000517326, 'Return on Equity ': -0.622504352324724, 'Free Cash Flow per Share': 0.46431578319706834, 'Price/Cash Flow': 1.9630498962559024, 'Dividend Yield (%)': 0.8787132293638346, 'Enterprise Value/EBIT': -4.144741074657258, 'Enterprise Value/EBITDA': 0.23636255200880235, 'Dividend Payout Ratio (%)': 1.390670831696456, '1': 0.06748530434166282}
+P-values: {'Constant': 0.6925474548163958, 'Price/Earnings': 0.9056379826322469, 'Price/Book Value': 0.008148787303647157, 'Return on Assets': 0.0017104166536207736, 'Return on Equity ': 0.5462980497741339, 'Free Cash Flow per Share': 0.6514758487235602, 'Price/Cash Flow': 0.07542106928052787, 'Dividend Yield (%)': 0.3983450036170497, 'Enterprise Value/EBIT': 0.001630900358838289, 'Enterprise Value/EBITDA': 0.8174949197560281, 'Dividend Payout Ratio (%)': 0.19181754794150194, '1': 0.9474063933565422}
+{'Constant': -81505877812.98395, 'Price/Earnings': 6993200406.444537, 'Price/Book Value': -239385061473.52734, 'Return on Assets': -527732678202.24384, 'Return on Equity ': -182298008084.4153, 'Free Cash Flow per Share': 55333293043.24702, 'Price/Cash Flow': 61984605506.906, 'Dividend Yield (%)': 216975762901.78152, 'Enterprise Value/EBIT': -838290710048.3556, 'Enterprise Value/EBITDA': 24657972995.284626, 'Dividend Payout Ratio (%)': 829007695363.4764, '1': 0.001063080902235049}
+this is the average adj r-square: 0.1514019430727511

@@ -1,0 +1,45 @@
+Namespace(end_date='2013-12-31', feature_names='Price/Earnings,Price/Book Value,Return on Assets,Return on Equity ,Free Cash Flow per Share,Price/Cash Flow,Dividend Yield (%),Enterprise Value/EBIT,Enterprise Value/EBITDA,Dividend Payout Ratio (%)', new_feature='7', path_to_file='./', start_date='2013-01-31', y='Return')
+AAPL
+this is Beta adj rsquare of AAPL and the value is 0.15240246887197217:
+MSFT
+this is Beta adj rsquare of MSFT and the value is -0.06756665752111712:
+AMZN
+AMZN
+AMZN
+this is Beta adj rsquare of AMZN and the value is -0.13478584981093178:
+GOOGL
+GOOGL
+GOOGL
+this is Beta adj rsquare of GOOGL and the value is 0.08741009579712011:
+JNJ
+this is Beta adj rsquare of JNJ and the value is -0.2737451130596389:
+V
+this is Beta adj rsquare of V and the value is -0.2770051302683776:
+PG
+this is Beta adj rsquare of PG and the value is -0.1493478838168527:
+JPM
+JPM
+JPM
+JPM
+this is Beta adj rsquare of JPM and the value is -0.25868197536174486:
+UNH
+UNH
+UNH
+UNH
+this is Beta adj rsquare of UNH and the value is -0.342940831144934:
+MA
+this is Beta adj rsquare of MA and the value is 0.12701330746330908:
+JLL
+JLL
+this is Beta adj rsquare of JLL and the value is 0.19407696372284666:
+TRGP
+this is Beta adj rsquare of TRGP and the value is 0.3839173584452089:
+FTI
+FTI
+FTI
+this is Beta adj rsquare of FTI and the value is -2.220446049250313e-16:
+OKE
+this is Beta adj rsquare of OKE and the value is -0.03495061274511335:
+SON
+this is Beta adj rsquare of SON and the value is -0.023160133031938424:
+DVN
