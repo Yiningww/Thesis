@@ -26,39 +26,20 @@ def my_sqrt(x):
     return np.sqrt(x.clip(lower=0.01))
 def parse_arguments():
     parser = argparse.ArgumentParser(description="langchain prompting")
-    parser.add_argument("--start_date", type=str, default="2013-01-31", help="startdate")
+    parser.add_argument("--start_date", type=int, default=2013, help="startdate")
     parser.add_argument("--path_to_file", type=str, default="./", help="startdate")
-    parser.add_argument("--end_date", type=str, default="2017-12-31", help="enddate")
+    parser.add_argument("--end_date", type=int, default=2020, help="enddate")
     parser.add_argument("--feature_names", type=str, default="Price/Earnings,Price/Book Value,Return on Assets,Return on Equity ,\
 Free Cash Flow per Share,Price/Cash Flow,Dividend Yield (%),Enterprise Value/EBIT,Enterprise Value/EBITDA,Dividend Payout Ratio (%)", help="feature_names")
 #     "Price/Earnings,Price/Book Value,Return on Assets,Return on Equity ,\
 # Free Cash Flow per Share,Price/Cash Flow,Dividend Yield (%),Enterprise Value/EBIT,Enterprise Value/EBITDA,Dividend Payout Ratio (%)"
-    parser.add_argument("--new_feature", type=str, default="012345678", help="newfeature")
-    parser.add_argument("--y", type=str, default="Return", help="return")
-
+    parser.add_argument("--new_feature", type=str, default="1", help="newfeature")
+    parser.add_argument("--y", type=str, default="3M Return", help="return")
 
     args = parser.parse_args()
     return args
-#todo
-dates = [
-         '2012-12-31', 
-         '2013-01-31', '2013-02-28', '2013-03-31', '2013-04-30', '2013-05-31', '2013-06-30', '2013-07-31',
-         '2013-08-31', '2013-09-30', '2013-10-31', '2013-11-30', 
-         '2013-12-31',
-         '2014-01-31', '2014-02-28', '2014-03-31', '2014-04-30', '2014-05-31', '2014-06-30', '2014-07-31',
-         '2014-08-31', '2014-09-30', '2014-10-31', '2014-11-30', 
-         '2014-12-31',
-        '2015-01-31', '2015-02-28', '2015-03-31', '2015-04-30', '2015-05-31', '2015-06-30', '2015-07-31',
-         '2015-08-31', '2015-09-30', '2015-10-31', '2015-11-30', 
-         '2015-12-31',
-         '2016-01-31', '2016-02-29', '2016-03-31', '2016-04-30', '2016-05-31', '2016-06-30', '2016-07-31',
-         '2016-08-31', '2016-09-30', '2016-10-31', '2016-11-30', 
-         '2016-12-31',
-         '2017-01-31', '2017-02-28', '2017-03-31', '2017-04-30', '2017-05-31', '2017-06-30', '2017-07-31',
-         '2017-08-31', '2017-09-30', '2017-10-31', '2017-11-30', 
-         '2017-12-31'
-         ]
-def get_historical_returns(ticker, start_date, end_date, frequency="monthly"):
+
+def get_historical_returns(ticker, start_date, end_date):
     'Function to fetch Historical Price data and compute returns'
     if os.path.exists("historical_return/"+ticker+start_date+"-"+end_date+".csv"):
         data = pd.read_csv("historical_return/"+ticker+start_date+"-"+end_date+".csv")
@@ -78,33 +59,17 @@ def get_historical_returns(ticker, start_date, end_date, frequency="monthly"):
     # daily_data['Return'] = daily_data['Close'].pct_change()
     # daily_returns = daily_data[['Return']].dropna()
     # Calculate Monthly Returns
+    if args.y == "Return":
+        monthly_data = monthly_data['Return'].resample('M').last()
+    elif args.y=="3M Return":
+        monthly_data = monthly_data['Return'].resample('3M').last()
+    returns = monthly_data.pct_change()
+    returns = returns.dropna()
 
-    monthly_data = monthly_data['Return'].resample('M').last()
-    #print("monthly data after:", monthly_data)
-    monthly_returns = monthly_data.pct_change()
-    monthly_returns = monthly_returns.dropna()
+    if args.y=="Return": return returns
+    elif args.y=="3M Return": return returns
+    return returns
 
-    if frequency == "daily": return daily_returns
-    if frequency == "monthly": return monthly_returns
-    return monthly_data
-
-def get_historical_returns_by_day(ticker, start_date, end_date, frequency="monthly"):
-    'Function to fetch Historical Price data and compute returns'
-    if os.path.exists("historical_return/"+ticker+start_date+"-"+end_date+".csv"):
-        data = pd.read_csv("historical_return/"+ticker+start_date+"-"+end_date+".csv")
-    else:
-        data = yf.download(ticker,start=start_date, end=end_date)
-        data.to_csv("historical_return/"+ticker+start_date+"-"+end_date+".csv")
-
-    #print("This ticker is:", ticker)
-    #print(data)
-    first_close = data['Close'].iloc[0]
-    last_close = data['Close'].iloc[-1]
-    # print(data.iloc[0])
-    # print(data.iloc[-1])
-    # 计算月度回报率
-    monthly_return = (last_close - first_close) / first_close
-    return monthly_return
 
 def resample_quaterly_data(quaterly_data, target_data):
     'Repeat the quaterly available ratios to same frequency as target return'
@@ -136,7 +101,7 @@ def load_data(args,ticker):
                 print("missing column is:", col)
     ratio_data = ratio_data[args.feature_names.split(",")]
     ratio_data = ratio_data.apply(lambda x: x.fillna(x.mean()), axis=0)
-    returns_data = get_historical_returns(ticker, args.start_date, args.end_date)
+    returns_data = get_historical_returns(ticker, str(args.start_date-1)+"-12-31", str(args.end_date)+"-12-31")
     adjusted_ratio_data = resample_quaterly_data(ratio_data, returns_data)
     features = pd.concat([adjusted_ratio_data, returns_data],axis=1)
     return features
@@ -164,9 +129,14 @@ def generate_betas(ticker_list, args):
 
         ######### AUTOMATE #########
         X = current_ticker[args.feature_names.split(",") + list(args.new_feature)]
-        Y = current_ticker[args.y]
+        Y = current_ticker["Return"]
+        # print(X)
+        # print(Y)
+        if args.y=="Return":
+            assert np.sum(np.abs(X.iloc[0,:]-X.iloc[1,:]))<0.00001 and np.sum(np.abs(X.iloc[2,:]-X.iloc[1,:]))<0.00001
+        assert X.shape[0]==Y.shape[0]
         X_col = list(X.columns)
-        X_col.append(args.y)
+        X_col.append("Return")
         if all_X is None:
             all_X = X
             all_Y = Y
@@ -181,7 +151,7 @@ def generate_betas(ticker_list, args):
         correlation_matrix = X_standardized_df.corr()
         #print(correlation_matrix)
         X_standardized = sm.add_constant(X_standardized)
-        #print(X_standardized)
+        #print(X_standardized) {'Constant': 0.029903637721214335, 'Price/Earnings': -0.03763798712237585, 'Price/Book Value': 0.03577050094427117, 'Return on Assets': -0.017846563104682377, 'Return on Equity ': 0.013856011643014973, 'Free Cash Flow per Share': 0.0045626668692036534, 'Price/Cash Flow': 0.018519080638970765, 'Dividend Yield (%)': -0.021059131504528275, 'Enterprise Value/EBIT': 0.023049280782905066, 'Enterprise Value/EBITDA': 0.023153282029693675, 'Dividend Payout Ratio (%)': 0.018961950417037535, '0': -0.03767389983583187},
         model = sm.OLS(Y, X_standardized, missing='drop')
         model_result = model.fit()
         model_result = model.fit()
@@ -196,9 +166,9 @@ def generate_betas(ticker_list, args):
     all_df = pd.DataFrame(all_standardized, columns=X_col)
     correlation_matrix = all_df.corr()
     plt.figure(figsize=(10, 8))
-    sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', fmt=".2f", linewidths=.5)
-    plt.title('Correlation Matrix Heatmap')
-    plt.show()
+    #sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', fmt=".2f", linewidths=.5)
+    #plt.title('Correlation Matrix Heatmap')
+    #plt.show()
     return beta_values
 
 def load_features1(args, ticker):
@@ -212,11 +182,11 @@ def load_features1(args, ticker):
     data_transposed.index = pd.to_datetime(data_transposed.index, format='%b \'%y')
     # Adjust to end of the month since the data is monthly
     data_transposed.index = data_transposed.index + pd.offsets.MonthEnd()
-    # Select only the required date range
+    # Select only the required date range {'Constant': 0.029903637721214335, 'Price/Earnings': -0.03763798712237585, 'Price/Book Value': 0.03577050094427117, 'Return on Assets': -0.017846563104682377, 'Return on Equity ': 0.013856011643014973, 'Free Cash Flow per Share': 0.0045626668692036534, 'Price/Cash Flow': 0.018519080638970765, 'Dividend Yield (%)': -0.021059131504528275, 'Enterprise Value/EBIT': 0.023049280782905066, 'Enterprise Value/EBITDA': 0.023153282029693675, 'Dividend Payout Ratio (%)': 0.018961950417037535, '0': -0.03767389983583187},
     #data_transposed = data_transposed.loc[:, start_date:end_date]
     # Convert all data to numeric, errors='coerce' will set non-convertible data to NaN
     data_transposed = data_transposed.apply(pd.to_numeric, errors='coerce')
-    # Fill NaN values with column mean
+    # Fill NaN values with co 'OKE', 'SON', 'DVN', 'HD', 'INTC'lumn mean
     data_transposed = data_transposed.fillna(data_transposed.mean())
     return data_transposed
 
@@ -235,14 +205,33 @@ def find_common_features(args, tickers):
 
 args = parse_arguments()
 print(args)
-stock_list = ['AAPL', 'PG', 'VZ', 'AMAT', 'MSFT', 'JNJ', 'V', 'PG', 'MA', 
+dates = []
+if args.y == "Return":
+    dates.append(str(args.start_date-1)+"-12-31")
+    for year in range(args.start_date,args.end_date+1):
+        dates_sub = [
+                '-01-31', '-02-28', '-03-31', '-04-30', '-05-31', '-06-30', '-07-31',
+                '-08-31', '-09-30', '-10-31', '-11-30', '-12-31']
+        dates = dates+[str(year)+d for d in dates_sub]
+elif args.y == "3M Return":
+    dates.append(str(args.start_date-1)+"-12-31")
+    for year in range(args.start_date,args.end_date+1):
+        dates_sub = ['-03-31', '-06-30', '-09-30','-12-31']
+        dates = dates+[str(year)+d for d in dates_sub]
+print(dates)
+
+stock_list = ['AAPL', 'PG', 'VZ', 'AMAT', 'MSFT', 'JNJ', 'V', 'MA', 
               'TRGP', 'OKE', 'SON', 'DVN', 'HD', 'INTC']
 #AMZN, GOOGL, JLL
 betas_dict = generate_betas(stock_list, args)
+print(len(betas_dict.keys()))
+print(len(betas_dict['AAPL']))
+print(len(betas_dict))
+# exit()
 beta_df = pd.DataFrame(betas_dict).transpose()
 
 print(stock_list)
-print(dates)
+
 financial_signals = ['Constant'] + args.feature_names.split(",") + list(args.new_feature)
 X = beta_df[args.feature_names.split(",") + list(args.new_feature)]
 
@@ -254,18 +243,17 @@ X_standardized_df = pd.DataFrame(X_standardized, columns=X.columns)
 X_standardized = sm.add_constant(X_standardized)
 gammas = {factor: [] for factor in financial_signals}
 adjusted_r_squared = []
-
+# print(X.shape)
 for date in range(0, len(dates)-1):
-    print("date now is:", dates[date])
+    print("date now X_standardizedis:", dates[date])
+    Y = []
     for company in betas_dict:
-        monthly_return_data = get_historical_returns_by_day(company, dates[date], dates[date+1], frequency="monthly")
-        #print(monthly_return_data)
-        ######################################## cross sectional ###################################
-        #return_value = monthly_return_data.iloc[0]  # 假设这是1月份的回报率
-        column_name = f"Return_{dates[date + 1].replace('-', '')}"
-        beta_df.at[company, column_name] = monthly_return_data
-
-    Y = beta_df[column_name]
+        monthly_return_data = get_historical_returns(company, dates[date], dates[date+1])
+        Y.append(monthly_return_data)
+    # print(X.shape)
+    Y = np.array(Y)
+    # print(X_standardized)
+    # print(Y)
     model = sm.OLS(Y, X_standardized, missing='drop')
     model_result = model.fit()
     # print(model_result)
@@ -273,9 +261,11 @@ for date in range(0, len(dates)-1):
     print("this is adj rsquare:", model_result.rsquared_adj)
     adjusted_r_squared.append(model_result.rsquared_adj)
     coefficients = model_result.params
+    print(len(coefficients))
     for i, factor in enumerate(financial_signals):
         gammas[factor].append(coefficients[i])
-# print(gammas)
+print(len(gammas.keys()))
+print(len(gammas['Constant']))
 t_values = {}
 p_values = {}
 average_gammas = {}
@@ -301,3 +291,4 @@ average_adj_rsquared = sum(adjusted_r_squared) / len(adjusted_r_squared)
     # print(coefficients)
 print(average_gammas)
 print("this is the average adj r-square:", average_adj_rsquared)
+print("this is the median adj r-square:",np.median(adjusted_r_squared))

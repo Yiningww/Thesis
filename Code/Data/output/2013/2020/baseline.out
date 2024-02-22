@@ -1,0 +1,123 @@
+Namespace(end_date=2020, feature_names='Price/Earnings,Price/Book Value,Return on Assets,Return on Equity ,Free Cash Flow per Share,Price/Cash Flow,Dividend Yield (%),Enterprise Value/EBIT,Enterprise Value/EBITDA,Dividend Payout Ratio (%)', new_feature='', path_to_file='./', start_date=2013, y='3M Return')
+['2012-12-31', '2013-03-31', '2013-06-30', '2013-09-30', '2013-12-31', '2014-03-31', '2014-06-30', '2014-09-30', '2014-12-31', '2015-03-31', '2015-06-30', '2015-09-30', '2015-12-31', '2016-03-31', '2016-06-30', '2016-09-30', '2016-12-31', '2017-03-31', '2017-06-30', '2017-09-30', '2017-12-31', '2018-03-31', '2018-06-30', '2018-09-30', '2018-12-31', '2019-03-31', '2019-06-30', '2019-09-30', '2019-12-31', '2020-03-31', '2020-06-30', '2020-09-30', '2020-12-31']
+this is Beta adj rsquare of AAPL and the value is 0.4065939029281711:
+this is Beta adj rsquare of PG and the value is 0.28686668788455194:
+this is Beta adj rsquare of VZ and the value is 0.3079118113618403:
+this is Beta adj rsquare of AMAT and the value is 0.23712642112889337:
+this is Beta adj rsquare of MSFT and the value is -0.05450142610118869:
+this is Beta adj rsquare of JNJ and the value is 0.30102901095050005:
+this is Beta adj rsquare of V and the value is 0.47934338452913905:
+this is Beta adj rsquare of MA and the value is 0.1722604122045962:
+this is Beta adj rsquare of TRGP and the value is 0.31456864941665375:
+this is Beta adj rsquare of OKE and the value is 0.3611058089621959:
+this is Beta adj rsquare of SON and the value is 0.6636286567055469:
+this is Beta adj rsquare of DVN and the value is -0.17245716150571488:
+this is Beta adj rsquare of HD and the value is 0.24582450383646925:
+this is Beta adj rsquare of INTC and the value is 0.21964368306159443:
+14
+11
+14
+['AAPL', 'PG', 'VZ', 'AMAT', 'MSFT', 'JNJ', 'V', 'MA', 'TRGP', 'OKE', 'SON', 'DVN', 'HD', 'INTC']
+date now X_standardizedis: 2012-12-31
+this is adj rsquare: 0.8661808008362373
+11
+date now X_standardizedis: 2013-03-31
+this is adj rsquare: 0.9088307530269926
+11
+date now X_standardizedis: 2013-06-30
+this is adj rsquare: 0.8816164966808272
+11
+date now X_standardizedis: 2013-09-30
+this is adj rsquare: 0.4056772426109333
+11
+date now X_standardizedis: 2013-12-31
+this is adj rsquare: -0.030451547882951235
+11
+date now X_standardizedis: 2014-03-31
+this is adj rsquare: 0.6924508858581548
+11
+date now X_standardizedis: 2014-06-30
+this is adj rsquare: -0.06427322038913807
+11
+date now X_standardizedis: 2014-09-30
+this is adj rsquare: 0.8572042128513591
+11
+date now X_standardizedis: 2014-12-31
+this is adj rsquare: -0.41151495301343854
+11
+date now X_standardizedis: 2015-03-31
+this is adj rsquare: 0.1410094481040588
+11
+date now X_standardizedis: 2015-06-30
+this is adj rsquare: 0.4467604079607156
+11
+date now X_standardizedis: 2015-09-30
+this is adj rsquare: 0.7586128516136357
+11
+date now X_standardizedis: 2015-12-31
+this is adj rsquare: -0.14404586832012845
+11
+date now X_standardizedis: 2016-03-31
+this is adj rsquare: 0.6445974039339013
+11
+date now X_standardizedis: 2016-06-30
+this is adj rsquare: 0.5543762814155543
+11
+date now X_standardizedis: 2016-09-30
+this is adj rsquare: -0.18554018244835602
+11
+date now X_standardizedis: 2016-12-31
+this is adj rsquare: -1.0199147095708532
+11
+date now X_standardizedis: 2017-03-31
+this is adj rsquare: 0.04663030304099802
+11
+date now X_standardizedis: 2017-06-30
+this is adj rsquare: 0.8743581458576523
+11
+date now X_standardizedis: 2017-09-30
+this is adj rsquare: -0.2851813594102983
+11
+date now X_standardizedis: 2017-12-31
+this is adj rsquare: 0.723559930805993
+11
+date now X_standardizedis: 2018-03-31
+this is adj rsquare: 0.37971666364839507
+11
+date now X_standardizedis: 2018-06-30
+this is adj rsquare: 0.5477883602582794
+11
+date now X_standardizedis: 2018-09-30
+this is adj rsquare: 0.9465632520796078
+11
+date now X_standardizedis: 2018-12-31
+this is adj rsquare: 0.5595788384276659
+11
+date now X_standardizedis: 2019-03-31
+this is adj rsquare: 0.3514525817995927
+11
+date now X_standardizedis: 2019-06-30
+this is adj rsquare: 0.10552642279996438
+11
+date now X_standardizedis: 2019-09-30
+this is adj rsquare: 0.18016032175276175
+11
+date now X_standardizedis: 2019-12-31
+this is adj rsquare: 0.7546667830065088
+11
+date now X_standardizedis: 2020-03-31
+this is adj rsquare: 0.9163065068335
+11
+date now X_standardizedis: 2020-06-30
+this is adj rsquare: 0.5940526428214591
+11
+date now X_standardizedis: 2020-09-30
+this is adj rsquare: 0.5237829889829665
+11
+11
+32
+T-values: {'Constant': 1.9652571671756052, 'Price/Earnings': -0.023728560984804963, 'Price/Book Value': -0.7691500447742171, 'Return on Assets': -1.7956291416590446, 'Return on Equity ': -2.3367536383136165, 'Free Cash Flow per Share': -0.8942138453655043, 'Price/Cash Flow': 0.704801337195674, 'Dividend Yield (%)': 0.9670118218773968, 'Enterprise Value/EBIT': -0.6589387742703348, 'Enterprise Value/EBITDA': -0.6624280204704224, 'Dividend Payout Ratio (%)': 1.5698165747099269}
+P-values: {'Constant': 0.058399212359508734, 'Price/Earnings': 0.9812212090520571, 'Price/Book Value': 0.44762520734309963, 'Return on Assets': 0.0823076736045257, 'Return on Equity ': 0.026089450675026837, 'Free Cash Flow per Share': 0.37809784002959057, 'Price/Cash Flow': 0.4861958110536553, 'Dividend Yield (%)': 0.34102227576556565, 'Enterprise Value/EBIT': 0.5148001839420903, 'Enterprise Value/EBITDA': 0.5125921318034214, 'Dividend Payout Ratio (%)': 0.12661001495934254}
+{'Constant': 0.036185566584815365, 'Price/Earnings': -0.00046023983960578885, 'Price/Book Value': -0.03818219536687062, 'Return on Assets': -0.023349080091403525, 'Return on Equity ': -0.0265764496192898, 'Free Cash Flow per Share': -0.04558351949635958, 'Price/Cash Flow': 0.0275764025180786, 'Dividend Yield (%)': 0.06493054502792425, 'Enterprise Value/EBIT': -0.3323966697425349, 'Enterprise Value/EBITDA': -0.32268318349622593, 'Dividend Payout Ratio (%)': 0.05428038232832877}
+this is the average adj r-square: 0.39126683393664224
+this is the median adj r-square: 0.5357856746206229

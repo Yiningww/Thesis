@@ -1,0 +1,63 @@
+Namespace(end_date=2017, feature_names='Price/Earnings,Price/Book Value,Return on Assets,Return on Equity ,Free Cash Flow per Share,Price/Cash Flow,Dividend Yield (%),Enterprise Value/EBIT,Enterprise Value/EBITDA,Dividend Payout Ratio (%)', new_feature='', path_to_file='./', start_date=2015, y='3M Return')
+['2014-12-31', '2015-03-31', '2015-06-30', '2015-09-30', '2015-12-31', '2016-03-31', '2016-06-30', '2016-09-30', '2016-12-31', '2017-03-31', '2017-06-30', '2017-09-30', '2017-12-31']
+this is Beta adj rsquare of AAPL and the value is 0.7558778342260355:
+this is Beta adj rsquare of PG and the value is -0.6307273865271104:
+this is Beta adj rsquare of VZ and the value is 0.09285414830049421:
+this is Beta adj rsquare of AMAT and the value is 0.2518740105553883:
+this is Beta adj rsquare of MSFT and the value is 0.7016945125337634:
+this is Beta adj rsquare of JNJ and the value is 0.6962674570000146:
+this is Beta adj rsquare of V and the value is 0.9568462492036807:
+this is Beta adj rsquare of MA and the value is 0.6003435668977993:
+this is Beta adj rsquare of TRGP and the value is 0.7910596928369229:
+this is Beta adj rsquare of OKE and the value is -1.9291191362967588:
+this is Beta adj rsquare of SON and the value is -0.6811318434015856:
+this is Beta adj rsquare of DVN and the value is 0.5386679833630263:
+this is Beta adj rsquare of HD and the value is 0.6782192750419804:
+this is Beta adj rsquare of INTC and the value is 0.9805092575809404:
+14
+11
+14
+['AAPL', 'PG', 'VZ', 'AMAT', 'MSFT', 'JNJ', 'V', 'MA', 'TRGP', 'OKE', 'SON', 'DVN', 'HD', 'INTC']
+date now X_standardizedis: 2014-12-31
+this is adj rsquare: 0.8336143696156175
+11
+date now X_standardizedis: 2015-03-31
+this is adj rsquare: -1.0586046826254831
+11
+date now X_standardizedis: 2015-06-30
+this is adj rsquare: -0.9406890096672711
+11
+date now X_standardizedis: 2015-09-30
+this is adj rsquare: -1.5026237539782015
+11
+date now X_standardizedis: 2015-12-31
+this is adj rsquare: 0.3044106284247651
+11
+date now X_standardizedis: 2016-03-31
+this is adj rsquare: -1.160480252073778
+11
+date now X_standardizedis: 2016-06-30
+this is adj rsquare: 0.30728675979377074
+11
+date now X_standardizedis: 2016-09-30
+this is adj rsquare: -1.3568909757363379
+11
+date now X_standardizedis: 2016-12-31
+this is adj rsquare: 0.3862670412975052
+11
+date now X_standardizedis: 2017-03-31
+this is adj rsquare: -0.7290789486488667
+11
+date now X_standardizedis: 2017-06-30
+this is adj rsquare: 0.1932041974636487
+11
+date now X_standardizedis: 2017-09-30
+this is adj rsquare: -0.34634392399115277
+11
+11
+12
+T-values: {'Constant': 1.1371613918635464, 'Price/Earnings': -0.901086729229137, 'Price/Book Value': -0.8806237168941549, 'Return on Assets': 0.8404291971952158, 'Return on Equity ': 0.6087889892184251, 'Free Cash Flow per Share': -0.180086352807866, 'Price/Cash Flow': 0.005124490759652936, 'Dividend Yield (%)': -0.08414374118243077, 'Enterprise Value/EBIT': -0.092271585936792, 'Enterprise Value/EBITDA': -0.08182564331035484, 'Dividend Payout Ratio (%)': -0.8451910704936576}
+P-values: {'Constant': 0.27963567130591355, 'Price/Earnings': 0.38684587052006403, 'Price/Book Value': 0.39735398935431887, 'Return on Assets': 0.4185611151666112, 'Return on Equity ': 0.5550280719763938, 'Free Cash Flow per Share': 0.8603594874553883, 'Price/Cash Flow': 0.9960030212712542, 'Dividend Yield (%)': 0.9344539778148345, 'Enterprise Value/EBIT': 0.9281412824881744, 'Enterprise Value/EBITDA': 0.936255269527981, 'Dividend Payout Ratio (%)': 0.4160095743689438}
+{'Constant': 0.021462046313540043, 'Price/Earnings': -0.5018180684600881, 'Price/Book Value': -0.02436620790124906, 'Return on Assets': 0.06512518583921828, 'Return on Equity ': 0.07557889244659934, 'Free Cash Flow per Share': -0.009514823982778522, 'Price/Cash Flow': 0.0007911494713725755, 'Dividend Yield (%)': -0.0025404902270389496, 'Enterprise Value/EBIT': -0.05278355982686195, 'Enterprise Value/EBITDA': -0.050724605121080076, 'Dividend Payout Ratio (%)': -0.5052399369845983}
+this is the average adj r-square: -0.42249404584381534
+this is the median adj r-square: -0.5377114363200097

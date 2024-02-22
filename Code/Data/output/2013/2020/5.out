@@ -1,0 +1,123 @@
+Namespace(end_date=2020, feature_names='Price/Earnings,Price/Book Value,Return on Assets,Return on Equity ,Free Cash Flow per Share,Price/Cash Flow,Dividend Yield (%),Enterprise Value/EBIT,Enterprise Value/EBITDA,Dividend Payout Ratio (%)', new_feature='5', path_to_file='./', start_date=2013, y='3M Return')
+['2012-12-31', '2013-03-31', '2013-06-30', '2013-09-30', '2013-12-31', '2014-03-31', '2014-06-30', '2014-09-30', '2014-12-31', '2015-03-31', '2015-06-30', '2015-09-30', '2015-12-31', '2016-03-31', '2016-06-30', '2016-09-30', '2016-12-31', '2017-03-31', '2017-06-30', '2017-09-30', '2017-12-31', '2018-03-31', '2018-06-30', '2018-09-30', '2018-12-31', '2019-03-31', '2019-06-30', '2019-09-30', '2019-12-31', '2020-03-31', '2020-06-30', '2020-09-30', '2020-12-31']
+this is Beta adj rsquare of AAPL and the value is 0.4065938478402785:
+this is Beta adj rsquare of PG and the value is 0.2876545861898422:
+this is Beta adj rsquare of VZ and the value is 0.39532806186869296:
+this is Beta adj rsquare of AMAT and the value is 0.21736385437080563:
+this is Beta adj rsquare of MSFT and the value is 0.23784238821846537:
+this is Beta adj rsquare of JNJ and the value is 0.29113230019131286:
+this is Beta adj rsquare of V and the value is 0.45331459922443806:
+this is Beta adj rsquare of MA and the value is 0.13577411451285626:
+this is Beta adj rsquare of TRGP and the value is 0.29563555163549204:
+this is Beta adj rsquare of OKE and the value is 0.33820954462510944:
+this is Beta adj rsquare of SON and the value is 0.678104096047347:
+this is Beta adj rsquare of DVN and the value is -0.22171380513205952:
+this is Beta adj rsquare of HD and the value is 0.22180726859272704:
+this is Beta adj rsquare of INTC and the value is 0.22539021561021522:
+14
+12
+14
+['AAPL', 'PG', 'VZ', 'AMAT', 'MSFT', 'JNJ', 'V', 'MA', 'TRGP', 'OKE', 'SON', 'DVN', 'HD', 'INTC']
+date now X_standardizedis: 2012-12-31
+this is adj rsquare: 0.4110578594525087
+12
+date now X_standardizedis: 2013-03-31
+this is adj rsquare: 0.47943276111136
+12
+date now X_standardizedis: 2013-06-30
+this is adj rsquare: -1.9542966060385565
+12
+date now X_standardizedis: 2013-09-30
+this is adj rsquare: 0.28374678458283187
+12
+date now X_standardizedis: 2013-12-31
+this is adj rsquare: -0.16809551068266826
+12
+date now X_standardizedis: 2014-03-31
+this is adj rsquare: 0.9311639831842495
+12
+date now X_standardizedis: 2014-06-30
+this is adj rsquare: -0.1850202336794533
+12
+date now X_standardizedis: 2014-09-30
+this is adj rsquare: -0.7039880853713685
+12
+date now X_standardizedis: 2014-12-31
+this is adj rsquare: -0.17482962518187728
+12
+date now X_standardizedis: 2015-03-31
+this is adj rsquare: 0.752190306771264
+12
+date now X_standardizedis: 2015-06-30
+this is adj rsquare: 0.3083798181009618
+12
+date now X_standardizedis: 2015-09-30
+this is adj rsquare: 0.8593231772262439
+12
+date now X_standardizedis: 2015-12-31
+this is adj rsquare: 0.2956136712967511
+12
+date now X_standardizedis: 2016-03-31
+this is adj rsquare: 0.47794714454180864
+12
+date now X_standardizedis: 2016-06-30
+this is adj rsquare: -0.6081140204182651
+12
+date now X_standardizedis: 2016-09-30
+this is adj rsquare: -0.24816324286923153
+12
+date now X_standardizedis: 2016-12-31
+this is adj rsquare: 0.258007529937621
+12
+date now X_standardizedis: 2017-03-31
+this is adj rsquare: 0.8708801692210706
+12
+date now X_standardizedis: 2017-06-30
+this is adj rsquare: 0.7206083294926657
+12
+date now X_standardizedis: 2017-09-30
+this is adj rsquare: 0.8769225425183693
+12
+date now X_standardizedis: 2017-12-31
+this is adj rsquare: -0.5730899791578159
+12
+date now X_standardizedis: 2018-03-31
+this is adj rsquare: -0.37352477091661007
+12
+date now X_standardizedis: 2018-06-30
+this is adj rsquare: 0.8134258573626385
+12
+date now X_standardizedis: 2018-09-30
+this is adj rsquare: -0.25878189722310574
+12
+date now X_standardizedis: 2018-12-31
+this is adj rsquare: -1.018538823311185
+12
+date now X_standardizedis: 2019-03-31
+this is adj rsquare: 0.9258411816552659
+12
+date now X_standardizedis: 2019-06-30
+this is adj rsquare: -0.9567106032410937
+12
+date now X_standardizedis: 2019-09-30
+this is adj rsquare: 0.40500630893147105
+12
+date now X_standardizedis: 2019-12-31
+this is adj rsquare: 0.5184208387066329
+12
+date now X_standardizedis: 2020-03-31
+this is adj rsquare: 0.7147355912454705
+12
+date now X_standardizedis: 2020-06-30
+this is adj rsquare: 0.7147871396444969
+12
+date now X_standardizedis: 2020-09-30
+this is adj rsquare: -0.14137076650593783
+12
+12
+32
+T-values: {'Constant': 1.9652571671756052, 'Price/Earnings': -0.20598182157783804, 'Price/Book Value': -0.6273617252106325, 'Return on Assets': -1.7459364767743801, 'Return on Equity ': -0.9567699579212936, 'Free Cash Flow per Share': -0.36365560477460723, 'Price/Cash Flow': -0.6783096013594977, 'Dividend Yield (%)': 1.1487853583785472, 'Enterprise Value/EBIT': -0.6745822830368995, 'Enterprise Value/EBITDA': -0.6494482029813453, 'Dividend Payout Ratio (%)': 2.144161299266409, '5': 0.8587124892681542}
+P-values: {'Constant': 0.058399212359508734, 'Price/Earnings': 0.838151910951612, 'Price/Book Value': 0.535016130930891, 'Return on Assets': 0.0907268836523971, 'Return on Equity ': 0.34608587032579585, 'Free Cash Flow per Share': 0.7185836127311951, 'Price/Cash Flow': 0.5026077734669789, 'Dividend Yield (%)': 0.2594315617206821, 'Enterprise Value/EBIT': 0.5049413228171677, 'Enterprise Value/EBITDA': 0.5208321067493265, 'Dividend Payout Ratio (%)': 0.039971573302476755, '5': 0.39709056213192795}
+{'Constant': 0.036185566584815365, 'Price/Earnings': -0.014500046130173666, 'Price/Book Value': -0.011755454678611763, 'Return on Assets': -0.025261774523671794, 'Return on Equity ': -0.016548722603532726, 'Free Cash Flow per Share': -0.003827754072098364, 'Price/Cash Flow': -0.019210826242578288, 'Dividend Yield (%)': 0.01782136925576303, 'Enterprise Value/EBIT': -0.12162265147327661, 'Enterprise Value/EBITDA': -0.11444639964726777, 'Dividend Payout Ratio (%)': 0.042258938056819025, '5': 0.06559665148601761}
+this is the average adj r-square: 0.13290521344957854
+this is the median adj r-square: 0.30199674469885646

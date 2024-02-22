@@ -1,0 +1,87 @@
+Namespace(end_date=2017, feature_names='Price/Earnings,Price/Book Value,Return on Assets,Return on Equity ,Free Cash Flow per Share,Price/Cash Flow,Dividend Yield (%),Enterprise Value/EBIT,Enterprise Value/EBITDA,Dividend Payout Ratio (%)', new_feature='2', path_to_file='./', start_date=2013, y='3M Return')
+['2012-12-31', '2013-03-31', '2013-06-30', '2013-09-30', '2013-12-31', '2014-03-31', '2014-06-30', '2014-09-30', '2014-12-31', '2015-03-31', '2015-06-30', '2015-09-30', '2015-12-31', '2016-03-31', '2016-06-30', '2016-09-30', '2016-12-31', '2017-03-31', '2017-06-30', '2017-09-30', '2017-12-31']
+this is Beta adj rsquare of AAPL and the value is 0.5134221064109472:
+this is Beta adj rsquare of PG and the value is 0.257033924151321:
+this is Beta adj rsquare of VZ and the value is 0.2698524203000481:
+this is Beta adj rsquare of AMAT and the value is -0.012253116970093014:
+this is Beta adj rsquare of MSFT and the value is 0.5495951455576618:
+this is Beta adj rsquare of JNJ and the value is 0.33176282855961914:
+this is Beta adj rsquare of V and the value is 0.1406168396627222:
+this is Beta adj rsquare of MA and the value is 0.22050328486457793:
+this is Beta adj rsquare of TRGP and the value is 0.3457464892619596:
+this is Beta adj rsquare of OKE and the value is 0.16900915623057755:
+this is Beta adj rsquare of SON and the value is 0.5298981249950067:
+this is Beta adj rsquare of DVN and the value is 0.4169595783114025:
+this is Beta adj rsquare of HD and the value is 0.28245048264324457:
+this is Beta adj rsquare of INTC and the value is 0.23156792770540324:
+14
+12
+14
+['AAPL', 'PG', 'VZ', 'AMAT', 'MSFT', 'JNJ', 'V', 'MA', 'TRGP', 'OKE', 'SON', 'DVN', 'HD', 'INTC']
+date now X_standardizedis: 2012-12-31
+this is adj rsquare: 0.7600202261125131
+12
+date now X_standardizedis: 2013-03-31
+this is adj rsquare: 0.03895888623443411
+12
+date now X_standardizedis: 2013-06-30
+this is adj rsquare: -0.0914103636751602
+12
+date now X_standardizedis: 2013-09-30
+this is adj rsquare: 0.8329682175381068
+12
+date now X_standardizedis: 2013-12-31
+this is adj rsquare: 0.3497316805297379
+12
+date now X_standardizedis: 2014-03-31
+this is adj rsquare: 0.19536909770448418
+12
+date now X_standardizedis: 2014-06-30
+this is adj rsquare: -0.5640640870974507
+12
+date now X_standardizedis: 2014-09-30
+this is adj rsquare: -0.7679526810156942
+12
+date now X_standardizedis: 2014-12-31
+this is adj rsquare: -0.1991918534885464
+12
+date now X_standardizedis: 2015-03-31
+this is adj rsquare: 0.9539670631665839
+12
+date now X_standardizedis: 2015-06-30
+this is adj rsquare: 0.880475167671014
+12
+date now X_standardizedis: 2015-09-30
+this is adj rsquare: 0.8374106363738633
+12
+date now X_standardizedis: 2015-12-31
+this is adj rsquare: 0.6671773754421245
+12
+date now X_standardizedis: 2016-03-31
+this is adj rsquare: 0.9492019757691776
+12
+date now X_standardizedis: 2016-06-30
+this is adj rsquare: 0.8943148729080634
+12
+date now X_standardizedis: 2016-09-30
+this is adj rsquare: -0.8195057043264615
+12
+date now X_standardizedis: 2016-12-31
+this is adj rsquare: 0.9744142654234706
+12
+date now X_standardizedis: 2017-03-31
+this is adj rsquare: 0.6302609280679956
+12
+date now X_standardizedis: 2017-06-30
+this is adj rsquare: 0.8470679162823717
+12
+date now X_standardizedis: 2017-09-30
+this is adj rsquare: 0.9074705166877768
+12
+12
+20
+T-values: {'Constant': 2.462685886547328, 'Price/Earnings': 2.0915064014898763, 'Price/Book Value': 1.4588827713127335, 'Return on Assets': 0.9555720987604847, 'Return on Equity ': 0.6320688773045359, 'Free Cash Flow per Share': 0.3451997243470785, 'Price/Cash Flow': -1.7361457707694872, 'Dividend Yield (%)': 0.6368566265200927, 'Enterprise Value/EBIT': -0.7752333670131298, 'Enterprise Value/EBITDA': -0.7054012639359439, 'Dividend Payout Ratio (%)': 2.124062588031754, '2': 1.5052426218129158}
+P-values: {'Constant': 0.023515115059086204, 'Price/Earnings': 0.05015029429937504, 'Price/Book Value': 0.1609321204444734, 'Return on Assets': 0.3512895687218617, 'Return on Equity ': 0.5348743041131225, 'Free Cash Flow per Share': 0.733736448058814, 'Price/Cash Flow': 0.09872638563250302, 'Dividend Yield (%)': 0.5318172092269471, 'Enterprise Value/EBIT': 0.4477435579896223, 'Enterprise Value/EBITDA': 0.4891193219870741, 'Dividend Payout Ratio (%)': 0.04701438778074045, '2': 0.1487054076303116}
+{'Constant': 0.03306529515745095, 'Price/Earnings': 0.2370019882267859, 'Price/Book Value': 0.026994730033369337, 'Return on Assets': 0.023701761593363683, 'Return on Equity ': 0.05649004053364319, 'Free Cash Flow per Share': 0.01639046012610609, 'Price/Cash Flow': -0.03802321232483315, 'Dividend Yield (%)': 0.012707751859226336, 'Enterprise Value/EBIT': -0.11963270831905463, 'Enterprise Value/EBITDA': -0.10670497613555412, 'Dividend Payout Ratio (%)': 0.2381831294790276, '2': 0.0756059445036523}
+this is the average adj r-square: 0.41383420681542027
+this is the median adj r-square: 0.7135988007773189

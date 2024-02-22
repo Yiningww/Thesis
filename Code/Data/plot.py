@@ -1,8 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
 #todo
-start_data = "2013-01-31"
-end_data = "2017-12-31"
+start_data = "2013"
+end_data = "2020"
 data = []
 # Example data
 for i in range(10):
