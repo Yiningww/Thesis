@@ -6,8 +6,9 @@ import argparse
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from sklearn.preprocessing import MinMaxScaler
-import tensorflow as tf
+import seaborn as sns
 import statsmodels.api as sm
+import matplotlib.pyplot as plt
 # grid search hyperparameters for lasso regression
 from numpy import arange
 from scipy import stats
@@ -32,7 +33,7 @@ def parse_arguments():
 Free Cash Flow per Share,Price/Cash Flow,Dividend Yield (%),Enterprise Value/EBIT,Enterprise Value/EBITDA,Dividend Payout Ratio (%)", help="feature_names")
 #     "Price/Earnings,Price/Book Value,Return on Assets,Return on Equity ,\
 # Free Cash Flow per Share,Price/Cash Flow,Dividend Yield (%),Enterprise Value/EBIT,Enterprise Value/EBITDA,Dividend Payout Ratio (%)"
-    parser.add_argument("--new_feature", type=str, default="", help="newfeature")
+    parser.add_argument("--new_feature", type=str, default="012345678", help="newfeature")
     parser.add_argument("--y", type=str, default="Return", help="return")
 
 
@@ -142,6 +143,8 @@ def load_data(args,ticker):
 
 def generate_betas(ticker_list, args):
     beta_values = {}
+    all_X = None
+    all_Y = None
     for ticker in ticker_list:
         current_ticker = load_data(args, ticker)
         ######################################### NEW FEATURES #################################################
@@ -162,6 +165,14 @@ def generate_betas(ticker_list, args):
         ######### AUTOMATE #########
         X = current_ticker[args.feature_names.split(",") + list(args.new_feature)]
         Y = current_ticker[args.y]
+        X_col = list(X.columns)
+        X_col.append(args.y)
+        if all_X is None:
+            all_X = X
+            all_Y = Y
+        else:
+            all_X = np.vstack([all_X, X])
+            all_Y = np.concatenate([all_Y,Y])
         # Z-Score Normalization (Standardization)
         standard_scaler = StandardScaler()
         X_standardized = standard_scaler.fit_transform(X)
@@ -180,6 +191,14 @@ def generate_betas(ticker_list, args):
         coefficients = model_result.params
         #######################################Add New Feature Here###################################
         beta_values[ticker] = dict(zip(['Constant'] + args.feature_names.split(",") + list(args.new_feature), coefficients))
+    standard_scaler = StandardScaler()
+    all_standardized = standard_scaler.fit_transform(np.c_[all_X,all_Y])
+    all_df = pd.DataFrame(all_standardized, columns=X_col)
+    correlation_matrix = all_df.corr()
+    plt.figure(figsize=(10, 8))
+    sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', fmt=".2f", linewidths=.5)
+    plt.title('Correlation Matrix Heatmap')
+    plt.show()
     return beta_values
 
 def load_features1(args, ticker):
