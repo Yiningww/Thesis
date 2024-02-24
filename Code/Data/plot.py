@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 #todo
 start_data = "2013"
-end_data = "2020"
+end_data = "2017"
 data = []
 # Example data
 for i in range(10):
@@ -26,7 +26,7 @@ plt.title('Box Plot {} to {}'.format(start_data, end_data))
 plt.ylabel('Adj R Squared')
 plt.xlabel('Features')
 plt.show()
-
+exit()
 # Creating the box plot
 plt.boxplot(data, showfliers=False)
 

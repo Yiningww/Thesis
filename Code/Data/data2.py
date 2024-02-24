@@ -51,7 +51,7 @@ def get_historical_returns(ticker, start_date, end_date, frequency="monthly"):
 
 def get_historical_returns_by_day(ticker, start_date, end_date, frequency="monthly"):
     'Function to fetch Historical Price data and compute returns'
-    data = yf.download(ticker,start=start_date, end=end_date)
+    data = yf.download(ticker,start=start_date, end=end_date) 
     print("This ticker is:", ticker)
     #print(data)
     #Exit here to test if the ticker has 对应时间的data
