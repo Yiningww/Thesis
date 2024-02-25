@@ -27,7 +27,7 @@ def my_sqrt(x):
 def parse_arguments():
     parser = argparse.ArgumentParser(description="langchain prompting")
     parser.add_argument("--start_date", type=int, default=2013, help="startdate")
-    parser.add_argument("--path_to_file", type=str, default="./", help="startdate")
+    parser.add_argument("--path_to_file", type=str, default="./Information Technology/FEB start/", help="startdate")
     parser.add_argument("--end_date", type=int, default=2014, help="enddate")
     parser.add_argument("--feature_names", type=str, default="Price/Earnings,Price/Book Value,Return on Assets,Return on Equity ,\
 Free Cash Flow per Share,Price/Cash Flow,Dividend Yield (%),Enterprise Value/EBITDA,Dividend Payout Ratio (%)", help="feature_names")
@@ -126,6 +126,8 @@ def load_data(args,ticker):
     returns_data = get_historical_returns(ticker, str(args.start_date-1)+"-12-31", str(args.end_date)+"-12-31")
     adjusted_ratio_data = resample_quaterly_data(ratio_data, returns_data)
     features = pd.concat([adjusted_ratio_data, returns_data],axis=1)
+    print("features:", features)
+    exit()
     return features
 
 def generate_betas(ticker_list, args):
@@ -268,14 +270,12 @@ info_tech_feb_start = ['ACN', 'ADBE', 'JBL', 'MU', 'ORCL']
 
 Russel_2000_stock_list = ['AAPL', 'AME', 'AMGN', 'AMT',  'DTE', 'DVN', 'EMN', 'FBIN', 'FERG', 'FR', 'GIS', 'H', 'LMT', 'LNT', 'LSTR',  'MCK', 'MCO', 'NEM', 'NLY', 'NNN', 'NUE',  'PEP', 'PH', 'PHM',  'RRC',  'SLB', 'TMO', 'AA', 
 'AAL', 'CF',  'CTRA','PG', 'VZ',  'MSFT', 'JNJ', 'V', 'MA', 'TRGP', 'OKE', 'SON',  'HD', 'INTC']
-print(len(stock_list))
 #AMZN, GOOGL, JLL, AMAT, 
-betas_dict = generate_betas(stock_list, args)
+betas_dict = generate_betas(info_tech_feb_start, args)
 # print(len(betas_dict.keys()))
 # print(len(betas_dict['AAPL']))
 # print(len(betas_dict))
 beta_df = pd.DataFrame(betas_dict).transpose()
-print(stock_list)
 
 financial_signals = ['Constant'] + args.feature_names.split(",") + list(args.new_feature)
 X = beta_df[args.feature_names.split(",") + list(args.new_feature)]
