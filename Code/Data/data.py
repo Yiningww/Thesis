@@ -26,14 +26,14 @@ def my_sqrt(x):
     return np.sqrt(x.clip(lower=0.01))
 def parse_arguments():
     parser = argparse.ArgumentParser(description="langchain prompting")
-    parser.add_argument("--start_date", type=int, default=2013, help="startdate")
-    parser.add_argument("--path_to_file", type=str, default="./Information Technology/FEB start/", help="startdate")
-    parser.add_argument("--end_date", type=int, default=2014, help="enddate")
+    parser.add_argument("--start_date", type=int, default=2016, help="startdate")
+    parser.add_argument("--path_to_file", type=str, default="./Information Technology/", help="startdate")
+    parser.add_argument("--end_date", type=int, default=2023, help="enddate")
     parser.add_argument("--feature_names", type=str, default="Price/Earnings,Price/Book Value,Return on Assets,Return on Equity ,\
-Free Cash Flow per Share,Price/Cash Flow,Dividend Yield (%),Enterprise Value/EBITDA,Dividend Payout Ratio (%)", help="feature_names")
+Free Cash Flow per Share,Price/Cash Flow,Dividend Yield (%),Enterprise Value/EBITDA,Gross Margin", help="feature_names")
 #Enterprise Value/EBIT,
     parser.add_argument("--new_feature", type=str, default="012345678", help="newfeature")
-    parser.add_argument("--y", type=str, default="Return", help="return")
+    parser.add_argument("--y", type=str, default="3M Return", help="return")
 
     args = parser.parse_args()
     return args
@@ -107,10 +107,17 @@ def resample_quaterly_data(quaterly_data, target_data):
     return aligned_quaterly_data
 
 def load_data(args,ticker):
-    # print(ticker)
-    file_path = args.path_to_file + ticker + '.xlsx'
-    sheet_name = ticker + '-US'
-    data = pd.read_excel(file_path, sheet_name=sheet_name, engine='openpyxl')
+    for start in ["FEB start/","JAN start/","DEC start/"]:
+        file_path = args.path_to_file + start + ticker + '.xlsx'
+        if os.path.isfile(file_path):
+            break
+    for sn in ['-US', '-USA']:
+        try:
+            sheet_name = ticker + sn
+            data = pd.read_excel(file_path, sheet_name=sheet_name, engine='openpyxl')
+            break
+        except:
+            pass
     data = data.reset_index(drop=True)
     data = data.set_index('Date').T
     data.index = pd.to_datetime(data.index, format='%b \'%y')
@@ -126,14 +133,12 @@ def load_data(args,ticker):
     returns_data = get_historical_returns(ticker, str(args.start_date-1)+"-12-31", str(args.end_date)+"-12-31")
     adjusted_ratio_data = resample_quaterly_data(ratio_data, returns_data)
     features = pd.concat([adjusted_ratio_data, returns_data],axis=1)
-    print("features:", features)
-    exit()
     return features
 
 def generate_betas(ticker_list, args):
     all_corr = np.zeros((19,19))
     ii=1
-    for i in range(1):
+    for i in range(ii):
         beta_values = {}
         all_X = None
         all_Y = None
@@ -157,11 +162,10 @@ def generate_betas(ticker_list, args):
             ######### AUTOMATE #########
             X = current_ticker[args.feature_names.split(",") + list(args.new_feature)]
             Y = current_ticker["Return"]
-            print(type(X), type(Y))
             
-            # print(Y)
+            
             if args.y=="Return":
-                assert np.sum(np.abs(X.iloc[0,:]-X.iloc[1,:]))<0.00001 and np.sum(np.abs(X.iloc[2,:]-X.iloc[1,:]))<0.00001
+                assert np.sum(np.abs(X.iloc[0,:]-X.iloc[1,:]))<0.00001 or np.sum(np.abs(X.iloc[2,:]-X.iloc[1,:]))<0.00001
                 assert X.shape[0] % 12 == 0
             assert X.shape[0] % 4 == 0
             assert X.shape[0]==Y.shape[0]
@@ -169,6 +173,8 @@ def generate_betas(ticker_list, args):
             X_col.append("Return")
             Y=Y.iloc[1:]
             X=X.iloc[:-1,:]
+            print(X)
+            print(Y)
             if all_X is None:
                 all_X = X.iloc[i,:]
                 all_Y = np.array([Y.iloc[i]])
@@ -179,13 +185,12 @@ def generate_betas(ticker_list, args):
             # Z-Score Normalization (Standardization)
             standard_scaler = StandardScaler()
             X_standardized = standard_scaler.fit_transform(X)
+
             # 转换回DataFrame以便进一步使用
             X_standardized_df = pd.DataFrame(X_standardized, columns=X.columns)
             correlation_matrix = X_standardized_df.corr()
             #print(correlation_matrix)
             X_standardized = sm.add_constant(X_standardized)
-            #print(X_standardized) {'Constant': 0.029903637721214335, 'Price/Earnings': -0.03763798712237585, 'Price/Book Value': 0.03577050094427117, 'Return on Assets': -0.017846563104682377, 'Return on Equity ': 0.013856011643014973, 'Free Cash Flow per Share': 0.0045626668692036534, 'Price/Cash Flow': 0.018519080638970765, 'Dividend Yield (%)': -0.021059131504528275, 'Enterprise Value/EBIT': 0.023049280782905066, 'Enterprise Value/EBITDA': 0.023153282029693675, 'Dividend Payout Ratio (%)': 0.018961950417037535, '0': -0.03767389983583187},
-        
             model = sm.OLS(Y, X_standardized, missing='drop')
             model_result = model.fit()
             model_result = model.fit()
@@ -205,20 +210,31 @@ def generate_betas(ticker_list, args):
         plt.figure(figsize=(10, 8))
         sns.heatmap(spearman_rank_corr, annot=True, cmap='coolwarm', fmt=".2f", linewidths=.5)
         plt.title('Correlation Matrix Heatmap')
-        plt.show()
+        # plt.show()
+        plt.savefig("output/figure/corr_{}.svg".format(i))
+        plt.close()
     plt.figure(figsize=(10, 8))
     all_corr/=ii
     sns.heatmap(all_corr, annot=True, cmap='coolwarm', fmt=".2f", linewidths=.5)
     plt.title('Correlation Matrix Heatmap')
-    plt.show()
-
+    # plt.show()
+    plt.savefig("output/figure/corr_avg.svg")
+    exit()
     return beta_values
 
 def load_features1(args, ticker):
     print("Loading features for ticker:", ticker)
-    file_path = args.path_to_file + ticker + '.xlsx'
-    sheet_name = ticker + '-US'
-    data = pd.read_excel(file_path, sheet_name=sheet_name, engine='openpyxl', index_col='Date')
+    for start in ["FEB start/","JAN start/","DEC start/"]:
+        file_path = args.path_to_file + start + ticker + '.xlsx'
+        if os.path.isfile(file_path):
+            break
+    for sn in ['-US', '-USA']:
+        try:
+            sheet_name = ticker + sn
+            data = pd.read_excel(file_path, sheet_name=sheet_name, engine='openpyxl', index_col='Date')
+            break
+        except:
+            pass
     # Transpose the DataFrame so that features become columns
     data_transposed = data.T
     # Convert the index to datetime, assuming it's in the format 'Mon YY'
@@ -262,8 +278,8 @@ elif args.y == "3M Return":
         dates_sub = ['-03-31', '-06-30', '-09-30','-12-31']
         dates = dates+[str(year)+d for d in dates_sub]
 print(dates)
-
-info_tech_dec_start = ['AAPL', 'AKAM', 'AMD', 'ANET', 'ANSS', 'APH', 'CDNS', 'CDW', 'CTSH', 'ENPH', 'EPAM', 'FFIV', 'FSLR', 'FTNT', 'GEN', 'GLW', 'IBM', 'INTC', 'IT', 'JNPR', 'KLAC', 'LRCX', 'MCHP', 'MPWR', 'MSFT', 'MSI', 'NOW', 'NXPI', 'ON', 'PTC', 'QCOM', 'QRVO', 'ROP', 'STX', 'SWKS', 'TDY', 'TEL', 'TER', 'TRMB', 'TXN', 'TYL', 'VRSN', 'WDC', 'ZBRA']
+#"QRVO"
+info_tech_dec_start = ['AAPL', 'AKAM', 'AMD', 'ANET', 'ANSS', 'APH', 'CDNS', 'CDW', 'CTSH', 'ENPH', 'EPAM', 'FFIV', 'FSLR', 'FTNT', 'GEN', 'GLW', 'IBM', 'INTC', 'IT', 'JNPR', 'KLAC', 'LRCX', 'MCHP', 'MPWR', 'MSFT', 'MSI', 'NOW', 'NXPI', 'ON', 'PTC', 'QCOM', 'ROP', 'STX', 'SWKS', 'TDY', 'TEL', 'TER', 'TRMB', 'TXN', 'TYL', 'VRSN', 'WDC', 'ZBRA']
 info_tech_jan_start = ['ADI', 'ADSK', 'AMAT', 'AVGO', 'CRM', 'CSCO', 'HPE', 'HPQ', 'INTU', 'KEYS', 'NTAP', 'NVDA', 'PANW', 'SNPS']
 
 info_tech_feb_start = ['ACN', 'ADBE', 'JBL', 'MU', 'ORCL']
@@ -271,7 +287,11 @@ info_tech_feb_start = ['ACN', 'ADBE', 'JBL', 'MU', 'ORCL']
 Russel_2000_stock_list = ['AAPL', 'AME', 'AMGN', 'AMT',  'DTE', 'DVN', 'EMN', 'FBIN', 'FERG', 'FR', 'GIS', 'H', 'LMT', 'LNT', 'LSTR',  'MCK', 'MCO', 'NEM', 'NLY', 'NNN', 'NUE',  'PEP', 'PH', 'PHM',  'RRC',  'SLB', 'TMO', 'AA', 
 'AAL', 'CF',  'CTRA','PG', 'VZ',  'MSFT', 'JNJ', 'V', 'MA', 'TRGP', 'OKE', 'SON',  'HD', 'INTC']
 #AMZN, GOOGL, JLL, AMAT, 
-betas_dict = generate_betas(info_tech_feb_start, args)
+lst = find_common_features(args,info_tech_dec_start+info_tech_jan_start+info_tech_feb_start)
+# lst.sort()
+# print(lst)
+# exit()
+betas_dict = generate_betas(info_tech_dec_start+info_tech_jan_start+info_tech_feb_start, args)
 # print(len(betas_dict.keys()))
 # print(len(betas_dict['AAPL']))
 # print(len(betas_dict))
