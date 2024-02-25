@@ -13,11 +13,13 @@ def parse_arguments():
     parser = argparse.ArgumentParser(description="langchain prompting")
 
     parser.add_argument("--start_date", type=str, default="2016-01-31", help="startdate")
-    parser.add_argument("--path_to_file", type=str, default="../Data/", help="startdate")
-    parser.add_argument("--end_date", type=str, default="2017-12-31", help="enddate")
-    parser.add_argument("--feature_names", type=str, default="Price/Earnings,Price/Book Value,Return on Assets,Return on Equity ,Free Cash Flow per Share,Price/Cash Flow,Dividend Yield (%),Enterprise Value/EBIT,Enterprise Value/EBITDA,Dividend Payout Ratio (%)", help="feature_names")
+    parser.add_argument("--path_to_file", type=str, default="../Data/Information Technology/DEC start/", help="startdate")
+    parser.add_argument("--end_date", type=str, default="2017-01-31", help="enddate")
+    parser.add_argument("--feature_names", type=str, default="Price/Earnings,Price/Book Value,Return on Assets,Return on Equity ,Free Cash Flow per Share,Price/Cash Flow,Enterprise Value/EBITDA,Gross Margin,Net Margin,Sales per Share", help="feature_names")
     parser.add_argument("--method", type=str, default="zero_shot_cot", choices=["zero_shot", "zero_shot_cot"], help="method")
     parser.add_argument("--model_name", type=str, default="gpt-4-1106-preview", choices=["gpt-3.5-turbo-1106", "gpt-4-1106-preview"], help="model_name")
+    parser.add_argument("--y", type=str, default="Return", help="return")
+
     args = parser.parse_args()
     args.answer_str = ""
     if args.method == "zero_shot_cot":
@@ -78,11 +80,22 @@ Definition: Similar to EV/EBIT, this ratio uses EBITDA (Earnings Before Interest
 Effect in Predicting Stock Returns: A lower EV/EBITDA ratio may indicate a company is undervalued relative to its operational cash earnings, potentially offering a good buying opportunity. This metric is widely used for valuation comparisons, especially for capital-intensive or highly leveraged companies.
 Preferred Tendency: Investors generally prefer a lower EV/EBITDA ratio, indicating the company is cheaper relative to its operational profitability.
 """,
-"Dividend Payout Ratio (%)":"""Dividend Payout Ratio (%):
-Definition: The Dividend Payout Ratio measures the percentage of earnings paid to shareholders in dividends. It's calculated by dividing the total dividends paid by the company's net income.
-Effect in Predicting Stock Returns: This ratio helps investors understand how much money a company is returning to shareholders versus reinvesting back into the business. A very high payout ratio may not be sustainable in the long term, whereas a too-low ratio might suggest the company is not returning enough value to shareholders.
-Preferred Tendency: A balanced dividend payout ratio is preferred; it should be sustainable based on the company's earnings, allow for growth reinvestment, and align with the company's overall financial strategy.
-"""}
+"Gross Margin":"""Gross Margin:
+Definition: Gross Margin is a profitability metric that measures the percentage of revenue that exceeds the cost of goods sold (COGS). It is calculated by subtracting COGS from total revenue and then dividing that figure by total revenue, often expressed as a percentage.
+Effect in Predicting Stock Returns: A high gross margin indicates that a company is efficient in producing its goods or services and can sell them at a significantly higher price than the cost of production, which may lead to higher earnings and potentially positive stock returns. Conversely, a low gross margin suggests lower efficiency and potentially less room for profit, which could impact stock performance negatively.
+Preferred Tendency: Investors generally prefer a higher gross margin as it indicates a company's strong pricing power and operational efficiency. However, the significance of gross margin can vary by industry, with some sectors naturally operating on lower margins.
+""",
+"Net Margin":"""Net Margin:
+Definition: Net Margin, also known as net profit margin, is a profitability ratio that measures how much net income a company earns relative to its total revenue. It is calculated by dividing net income by total revenue and expressing the result as a percentage. This metric takes into account all expenses, including COGS, operating expenses, interest, taxes, and other income or losses.
+Effect in Predicting Stock Returns: A high net margin indicates that a company is effective not only in managing the cost of goods sold but also in controlling operating expenses and other costs, leading to higher profitability. A consistently high net margin could signal strong company management and potentially positive stock returns. Conversely, a low net margin may indicate higher risk and potential challenges in sustaining profitability.
+Preferred Tendency: Investors typically favor companies with higher net margins, as they demonstrate a company's ability to convert sales into actual profit. Like gross margin, the importance and benchmark of net margin can vary significantly across different industries.
+""",
+"Sales per Share":"""Sales per Share:
+Definition: Sales per Share is a financial ratio that measures the amount of a company's total sales or revenue generated per share of stock. It is calculated by dividing the total revenue of the company by the average number of shares outstanding.
+Effect in Predicting Stock Returns: This metric can provide insight into a company's efficiency in generating sales revenue relative to its share base. An increasing sales per share figure can indicate growth in the company's business and may be a positive signal for stock returns, suggesting that the company is effectively leveraging its assets to increase sales.
+Preferred Tendency: While higher sales per share are generally viewed positively, indicating strong sales performance and potential for profit growth, investors should also consider other factors such as net margin and industry context. Growth in sales per share is more meaningful when accompanied by healthy profit margins and in comparison to industry peers.
+"""
+}
 
 template1 = """I will give you some financial features like Price/Earnings  Price/Book Value  Return on Assets,   Return on Equity, and   
 Free Cash Flow per Share, .
@@ -114,25 +127,36 @@ feature_def = ""
 for i,f in enumerate(args.feature_names.split(",")):
     feature_def += str(i) + ". " + feature_defs[f] + "\n"
 
-def get_historical_returns(ticker, start_date, end_date, frequency="monthly"):
+def get_historical_returns(ticker, start_date, end_date):
     'Function to fetch Historical Price data and compute returns'
-    data = yf.download(ticker,start=start_date, end=end_date)
+    print(ticker, start_date, end_date)
+    if os.path.exists("historical_return/"+ticker+start_date+"-"+end_date+".csv"):
+        data = pd.read_csv("historical_return/"+ticker+start_date+"-"+end_date+".csv")
+        monthly_data = data.copy()
+        monthly_data['Return'] = monthly_data['Close']
+        monthly_data['Date']=pd.to_datetime(monthly_data['Date'])
+        monthly_data = monthly_data.set_index('Date')
+    else:
+        data = yf.download(ticker,start=start_date, end=end_date)
+        data.to_csv("../Data/historical_return/"+ticker+start_date+"-"+end_date+".csv")
+        monthly_data = data.copy()
+        monthly_data['Return'] = monthly_data['Close']
     # Calculate Daily Returns
-    daily_data = data.copy()
-    #print("daily_data:", daily_data)
-    daily_data['Return'] = daily_data['Close'].pct_change()
-    daily_returns = daily_data[['Return']].dropna()
+    # daily_data = data.copy()
+    # #print("daily_data:", daily_data)
+    # daily_data['Return'] = daily_data['Close'].pct_change()
+    # daily_returns = daily_data[['Return']].dropna()
     # Calculate Monthly Returns
-    monthly_data = data.copy()
-    monthly_data['Return'] = monthly_data['Close']
-    monthly_data = monthly_data['Return'].resample('M').last()
-    #print("monthly data after:", monthly_data)
-    monthly_returns = monthly_data.pct_change()
-    monthly_returns = monthly_returns.dropna()
+    if args.y == "Return":
+        monthly_data = monthly_data['Return'].resample('M').last()
+    elif args.y=="3M Return":
+        monthly_data = monthly_data['Return'].resample('3M').last()
+    returns = monthly_data.pct_change()
+    returns = returns.dropna()
+    if args.y=="Return": return returns
+    elif args.y=="3M Return": return returns
+    return returns
 
-    if frequency == "daily": return daily_returns
-    if frequency == "monthly": return monthly_returns
-    return monthly_data
 def resample_quaterly_data(quaterly_data, target_data):
     'Repeat the quaterly available ratios to same frequency as target return'
     quaterly_data.index = pd.to_datetime(quaterly_data.index)
@@ -167,7 +191,7 @@ def load_data(args,stock_list):
         features = pd.concat([adjusted_ratio_data, returns_data],axis=1)
         data_str += "data for company: " + ticker +"\n"+features.to_string() +"\n\n"
     return data_str
-stock_list = ['AAPL','MSFT', 'AMZN', 'GOOGL', 'JNJ', 'V', 'PG', 'JPM', 'UNH', 'MA', 'LYV', 'JLL','TRGP','FTI', 'OKE', 'SON', 'DVN']
+stock_list = ['AAPL', 'AKAM', 'AMD', 'ANET', 'ANSS', 'APH', 'CDNS']
 data_str = load_data(args,stock_list)
 
 q1 = "Please give me the definitions of the provided features, explain their effect in predicting stock returns and the preferred tendency of the features"
@@ -194,7 +218,7 @@ output = {
         }
 print(result)
 
-outfilepath = './output/'+args.model_name+'/'+args.method + '/'
+outfilepath = './output/' + args.model_name + '/'+args.method + '/' + 'new' + '/'
 file_name = f"out_{args.model_name}_{args.method}.csv"
 filepath = os.path.join(outfilepath, file_name)
 if not os.path.exists(outfilepath):
