@@ -144,20 +144,38 @@ def generate_betas(ticker_list, args):
         all_Y = None
         for ticker in ticker_list:
             current_ticker = load_data(args, ticker)
+            pe = current_ticker['Price/Earnings'] 
+            pb = current_ticker['Price/Book Value']
+            roe = current_ticker['Return on Equity ']
+            roa = current_ticker['Return on Assets']
+            ebitda = current_ticker['Enterprise Value/EBITDA']
+            fcfps = current_ticker['Free Cash Flow per Share']
+            pcf = current_ticker['Price/Cash Flow']
+            gm = current_ticker['Gross Margin']
+            nm = current_ticker['Net Margin']
+            sps = current_ticker['Sales per Share']
             ######################################### NEW FEATURES #################################################
-            current_ticker['0'] =  current_ticker['Price/Earnings'] / (current_ticker['Return on Equity '] * current_ticker['Free Cash Flow per Share']) #VPR
-            current_ticker['1'] = my_log(current_ticker['Price/Earnings']) * my_log(current_ticker['Return on Equity ']) * my_log(current_ticker["Dividend Yield (%)"] + 1) #PEI 
-            current_ticker['2'] = current_ticker['Return on Equity '] / current_ticker['Price/Earnings'] #PVS
+            current_ticker['0'] =  pe / (roe * fcfps) #VPR
+            #PEI 
+            current_ticker['2'] = roe / pe #PVS
             beta = 2
-            current_ticker['3'] = current_ticker['Return on Equity '] / (current_ticker['Price/Earnings']**beta) #RAPS
-            current_ticker['4']= (current_ticker['Return on Equity '] * current_ticker['Free Cash Flow per Share'] / (current_ticker['Price/Earnings']+1)) * (1.0 / (current_ticker['Enterprise Value/EBITDA']+1)) #IOS
-            current_ticker['5'] = (1.0/(current_ticker["Return on Assets"]+1)) * (1.0/(current_ticker['Enterprise Value/EBITDA']+1)) * (1.0/(current_ticker['Price/Cash Flow']+1)) #EVC
-            current_ticker['6'] = current_ticker["Dividend Yield (%)"] * (1.0 / current_ticker["Price/Earnings"]) * current_ticker["Return on Equity "] #NF
-            current_ticker['7'] = (current_ticker['Return on Equity '] * current_ticker["Return on Assets"]) * (my_sqrt(current_ticker['Price/Earnings'] \
-                * current_ticker['Price/Book Value'] * current_ticker['Price/Cash Flow'])) * (current_ticker['Free Cash Flow per Share'] \
-                    * current_ticker["Dividend Yield (%)"]) * (1.0 / (current_ticker['Enterprise Value/EBITDA']+1.0)) + (current_ticker['Price/Earnings'])**2 #FinancialHealthScore
-            current_ticker['8'] = (1.0 / current_ticker['Price/Earnings']) * current_ticker['Return on Equity '] * current_ticker['Dividend Yield (%)'] #Non-Linear Feature
-            current_ticker['9'] = ( current_ticker['Price/Earnings'] + current_ticker['Return on Equity '] + current_ticker['Free Cash Flow per Share'])/3.0
+            current_ticker['3'] = roe / (pe**beta) #RAPS
+            current_ticker['4']= (roe * fcfps / (pe)) * (1.0 / (ebitda)) #IOS
+            current_ticker['5'] = (1.0/(roa)) * (1.0/(ebitda)) * (1.0/(pcf)) #EVC
+            #NF
+            #FinancialHealthScore
+            # 8 Non-Linear Feature
+            current_ticker['9'] = (pe + roe + fcfps)/3.0
+            current_ticker['A'] = (roe * gm) / pe #
+            current_ticker['B'] = (roe * roa * fcfps) / (pe * pb * pcf) #PIR
+            c = 1
+            current_ticker['C'] = my_log(fcfps + c) * (1/roe) * np.exp(-pe) * gm #GEC
+            current_ticker['D'] = (roe * (1 / pe) * (1 / pb)) * my_log(sps) #Investment Quality Score (IQS)
+            current_ticker['E'] = my_sqrt((roa*roe)/pe) + my_log(fcfps) * gm #FHGS
+
+
+
+
 
             ######### AUTOMATE #########
             X = current_ticker[args.feature_names.split(",") + list(args.new_feature)]
