@@ -24,15 +24,17 @@ def my_log(x):
     return np.log(x.clip(lower=0.01))
 def my_sqrt(x):
     return np.sqrt(x.clip(lower=0.01))
+def my_exp(x):
+    return np.exp(x.clip(upper=10))
 def parse_arguments():
     parser = argparse.ArgumentParser(description="langchain prompting")
     parser.add_argument("--start_date", type=int, default=2016, help="startdate")
     parser.add_argument("--path_to_file", type=str, default="./Information Technology/", help="startdate")
-    parser.add_argument("--end_date", type=int, default=2023, help="enddate")
+    parser.add_argument("--end_date", type=int, default=2020, help="enddate")
     parser.add_argument("--feature_names", type=str, default="Price/Earnings,Price/Book Value,Return on Assets,Return on Equity ,\
-Free Cash Flow per Share,Price/Cash Flow,Dividend Yield (%),Enterprise Value/EBITDA,Gross Margin", help="feature_names")
+Free Cash Flow per Share,Price/Cash Flow,Enterprise Value/EBITDA,Gross Margin,Net Margin,Sales per Share", help="feature_names")
 #Enterprise Value/EBIT,
-    parser.add_argument("--new_feature", type=str, default="012345678", help="newfeature")
+    parser.add_argument("--new_feature", type=str, default="", help="newfeature")
     parser.add_argument("--y", type=str, default="3M Return", help="return")
 
     args = parser.parse_args()
@@ -136,7 +138,7 @@ def load_data(args,ticker):
     return features
 
 def generate_betas(ticker_list, args):
-    all_corr = np.zeros((19,19))
+    all_corr = np.zeros((len(args.feature_names.split(",") + list(args.new_feature))+1,len(args.feature_names.split(",") + list(args.new_feature))+1))
     ii=1
     for i in range(ii):
         beta_values = {}
@@ -157,30 +159,25 @@ def generate_betas(ticker_list, args):
             ######################################### NEW FEATURES #################################################
             current_ticker['0'] =  pe / (roe * fcfps) #VPR
             #PEI 
-            current_ticker['2'] = roe / pe #PVS
+            current_ticker['1'] = roe / pe #PVS
             beta = 2
-            current_ticker['3'] = roe / (pe**beta) #RAPS
-            current_ticker['4']= (roe * fcfps / (pe)) * (1.0 / (ebitda)) #IOS
-            current_ticker['5'] = (1.0/(roa)) * (1.0/(ebitda)) * (1.0/(pcf)) #EVC
+            current_ticker['2'] = roe / (pe**beta) #RAPS
+            current_ticker['3']= (roe * fcfps / (pe)) * (1.0 / (ebitda)) #IOS
+            current_ticker['4'] = (1.0/(roa)) * (1.0/(ebitda)) * (1.0/(pcf)) #EVC
             #NF
             #FinancialHealthScore
             # 8 Non-Linear Feature
-            current_ticker['9'] = (pe + roe + fcfps)/3.0
-            current_ticker['A'] = (roe * gm) / pe #
-            current_ticker['B'] = (roe * roa * fcfps) / (pe * pb * pcf) #PIR
+            current_ticker['5'] = (pe + roe + fcfps)/3.0
+            current_ticker['6'] = (roe * gm) / pe #
+            current_ticker['7'] = (roe * roa * fcfps) / (pe * pb * pcf) #PIR
             c = 1
-            current_ticker['C'] = my_log(fcfps + c) * (1/roe) * np.exp(-pe) * gm #GEC
-            current_ticker['D'] = (roe * (1 / pe) * (1 / pb)) * my_log(sps) #Investment Quality Score (IQS)
-            current_ticker['E'] = my_sqrt((roa*roe)/pe) + my_log(fcfps) * gm #FHGS
-
-
-
-
+            current_ticker['8'] = my_log(fcfps + c) * (1/roe) * my_exp(-pe) * gm #GEC
+            current_ticker['9'] = (roe * (1 / pe) * (1 / pb)) * my_log(sps) #Investment Quality Score (IQS)
+            current_ticker['A'] = my_sqrt((roa*roe)/pe) + my_log(fcfps) * gm #FHGS
 
             ######### AUTOMATE #########
             X = current_ticker[args.feature_names.split(",") + list(args.new_feature)]
             Y = current_ticker["Return"]
-            
             
             if args.y=="Return":
                 assert np.sum(np.abs(X.iloc[0,:]-X.iloc[1,:]))<0.00001 or np.sum(np.abs(X.iloc[2,:]-X.iloc[1,:]))<0.00001
@@ -191,8 +188,6 @@ def generate_betas(ticker_list, args):
             X_col.append("Return")
             Y=Y.iloc[1:]
             X=X.iloc[:-1,:]
-            print(X)
-            print(Y)
             if all_X is None:
                 all_X = X.iloc[i,:]
                 all_Y = np.array([Y.iloc[i]])
@@ -203,14 +198,12 @@ def generate_betas(ticker_list, args):
             # Z-Score Normalization (Standardization)
             standard_scaler = StandardScaler()
             X_standardized = standard_scaler.fit_transform(X)
-
             # 转换回DataFrame以便进一步使用
             X_standardized_df = pd.DataFrame(X_standardized, columns=X.columns)
             correlation_matrix = X_standardized_df.corr()
             #print(correlation_matrix)
             X_standardized = sm.add_constant(X_standardized)
             model = sm.OLS(Y, X_standardized, missing='drop')
-            model_result = model.fit()
             model_result = model.fit()
             # print(model_result)
             #print(beta_df)
@@ -225,19 +218,19 @@ def generate_betas(ticker_list, args):
         correlation_matrix = all_df.corr()
         spearman_rank_corr = all_df.corr(method='spearman')
         all_corr+=spearman_rank_corr
-        plt.figure(figsize=(10, 8))
-        sns.heatmap(spearman_rank_corr, annot=True, cmap='coolwarm', fmt=".2f", linewidths=.5)
-        plt.title('Correlation Matrix Heatmap')
-        # plt.show()
-        plt.savefig("output/figure/corr_{}.svg".format(i))
-        plt.close()
-    plt.figure(figsize=(10, 8))
-    all_corr/=ii
-    sns.heatmap(all_corr, annot=True, cmap='coolwarm', fmt=".2f", linewidths=.5)
-    plt.title('Correlation Matrix Heatmap')
-    # plt.show()
-    plt.savefig("output/figure/corr_avg.svg")
-    exit()
+        # plt.figure(figsize=(10, 8))
+        # sns.heatmap(spearman_rank_corr, annot=True, cmap='coolwarm', fmt=".2f", linewidths=.5)
+        # plt.title('Correlation Matrix Heatmap')
+        # # plt.show()
+        # plt.savefig("output/figure/corr_{}.svg".format(i))
+        # plt.close()
+    # plt.figure(figsize=(10, 8))
+    # all_corr/=ii
+    # sns.heatmap(all_corr, annot=True, cmap='coolwarm', fmt=".2f", linewidths=.5)
+    # plt.title('Correlation Matrix Heatmap')
+    # # plt.show()
+    # plt.savefig("output/figure/corr_avg.svg")
+    # exit()
     return beta_values
 
 def load_features1(args, ticker):
@@ -305,7 +298,7 @@ info_tech_feb_start = ['ACN', 'ADBE', 'JBL', 'MU', 'ORCL']
 Russel_2000_stock_list = ['AAPL', 'AME', 'AMGN', 'AMT',  'DTE', 'DVN', 'EMN', 'FBIN', 'FERG', 'FR', 'GIS', 'H', 'LMT', 'LNT', 'LSTR',  'MCK', 'MCO', 'NEM', 'NLY', 'NNN', 'NUE',  'PEP', 'PH', 'PHM',  'RRC',  'SLB', 'TMO', 'AA', 
 'AAL', 'CF',  'CTRA','PG', 'VZ',  'MSFT', 'JNJ', 'V', 'MA', 'TRGP', 'OKE', 'SON',  'HD', 'INTC']
 #AMZN, GOOGL, JLL, AMAT, 
-lst = find_common_features(args,info_tech_dec_start+info_tech_jan_start+info_tech_feb_start)
+# lst = find_common_features(args,info_tech_dec_start+info_tech_jan_start+info_tech_feb_start)
 # lst.sort()
 # print(lst)
 # exit()
