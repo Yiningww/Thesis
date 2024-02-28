@@ -29,7 +29,7 @@ def my_exp(x):
 def parse_arguments():
     parser = argparse.ArgumentParser(description="langchain prompting")
     parser.add_argument("--start_date", type=int, default=2016, help="startdate")
-    parser.add_argument("--path_to_file", type=str, default="./Information Technology/", help="startdate")
+    parser.add_argument("--path_to_file", type=str, default="./Energy/", help="startdate")
     parser.add_argument("--end_date", type=int, default=2020, help="enddate")
     parser.add_argument("--feature_names", type=str, default="Price/Earnings,Price/Book Value,Return on Assets,Return on Equity ,\
 Free Cash Flow per Share,Price/Cash Flow,Enterprise Value/EBITDA,Gross Margin,Net Margin,Sales per Share", help="feature_names")
@@ -109,7 +109,8 @@ def resample_quaterly_data(quaterly_data, target_data):
     return aligned_quaterly_data
 
 def load_data(args,ticker):
-    for start in ["FEB start/","JAN start/","DEC start/"]:
+    # for start in ["FEB start/","JAN start/","DEC start/"]:
+    for start in ["DEC start/"]:
         file_path = args.path_to_file + start + ticker + '.xlsx'
         if os.path.isfile(file_path):
             break
@@ -139,12 +140,13 @@ def load_data(args,ticker):
 
 def generate_betas(ticker_list, args):
     all_corr = np.zeros((len(args.feature_names.split(",") + list(args.new_feature))+1,len(args.feature_names.split(",") + list(args.new_feature))+1))
-    ii=1
-    for i in range(ii):
+    ii=15
+    for i in range(ii): # number of year * 4 - 1 for instance: 2016-2020
         beta_values = {}
         all_X = None
         all_Y = None
         for ticker in ticker_list:
+            print("RIGHT NOW THE TICKER IS:", ticker)
             current_ticker = load_data(args, ticker)
             pe = current_ticker['Price/Earnings'] 
             pb = current_ticker['Price/Book Value']
@@ -157,7 +159,7 @@ def generate_betas(ticker_list, args):
             nm = current_ticker['Net Margin']
             sps = current_ticker['Sales per Share']
             ######################################### NEW FEATURES #################################################
-            current_ticker['0'] =  pe / (roe * fcfps) #VPR
+            current_ticker['0'] =  pe / (roe * fcfps + 0.001) #VPR
             #PEI 
             current_ticker['1'] = roe / pe #PVS
             beta = 2
@@ -215,27 +217,29 @@ def generate_betas(ticker_list, args):
         all_standardized = standard_scaler.fit_transform(np.c_[all_X,all_Y])
         no_standardized = np.c_[all_X,all_Y]
         all_df = pd.DataFrame(no_standardized, columns=X_col)
+        ########################## CORRELATION MATRIX AND HEAT MAP #########################
         correlation_matrix = all_df.corr()
         spearman_rank_corr = all_df.corr(method='spearman')
         all_corr+=spearman_rank_corr
-        # plt.figure(figsize=(10, 8))
-        # sns.heatmap(spearman_rank_corr, annot=True, cmap='coolwarm', fmt=".2f", linewidths=.5)
-        # plt.title('Correlation Matrix Heatmap')
-        # # plt.show()
-        # plt.savefig("output/figure/corr_{}.svg".format(i))
-        # plt.close()
-    # plt.figure(figsize=(10, 8))
-    # all_corr/=ii
-    # sns.heatmap(all_corr, annot=True, cmap='coolwarm', fmt=".2f", linewidths=.5)
-    # plt.title('Correlation Matrix Heatmap')
-    # # plt.show()
-    # plt.savefig("output/figure/corr_avg.svg")
-    # exit()
+        plt.figure(figsize=(10, 8))
+        sns.heatmap(spearman_rank_corr, annot=True, cmap='coolwarm', fmt=".2f", linewidths=.5)
+        plt.title('Correlation Matrix Heatmap')
+        # plt.show()
+        plt.savefig("output/figure/corr_{}.svg".format(i))
+        plt.close()
+    plt.figure(figsize=(10, 8))
+    all_corr/=ii
+    sns.heatmap(all_corr, annot=True, cmap='coolwarm', fmt=".2f", linewidths=.5)
+    plt.title('Correlation Matrix Heatmap')
+    # plt.show()
+    plt.savefig("output/figure/corr_avg.svg")
+
     return beta_values
 
 def load_features1(args, ticker):
     print("Loading features for ticker:", ticker)
-    for start in ["FEB start/","JAN start/","DEC start/"]:
+    # for start in ["FEB start/","JAN start/","DEC start/"]:
+    for start in ["DEC start/"]:
         file_path = args.path_to_file + start + ticker + '.xlsx'
         if os.path.isfile(file_path):
             break
@@ -291,18 +295,36 @@ elif args.y == "3M Return":
 print(dates)
 #"QRVO"
 info_tech_dec_start = ['AAPL', 'AKAM', 'AMD', 'ANET', 'ANSS', 'APH', 'CDNS', 'CDW', 'CTSH', 'ENPH', 'EPAM', 'FFIV', 'FSLR', 'FTNT', 'GEN', 'GLW', 'IBM', 'INTC', 'IT', 'JNPR', 'KLAC', 'LRCX', 'MCHP', 'MPWR', 'MSFT', 'MSI', 'NOW', 'NXPI', 'ON', 'PTC', 'QCOM', 'ROP', 'STX', 'SWKS', 'TDY', 'TEL', 'TER', 'TRMB', 'TXN', 'TYL', 'VRSN', 'WDC', 'ZBRA']
+
 info_tech_jan_start = ['ADI', 'ADSK', 'AMAT', 'AVGO', 'CRM', 'CSCO', 'HPE', 'HPQ', 'INTU', 'KEYS', 'NTAP', 'NVDA', 'PANW', 'SNPS']
 
 info_tech_feb_start = ['ACN', 'ADBE', 'JBL', 'MU', 'ORCL']
 
-Russel_2000_stock_list = ['AAPL', 'AME', 'AMGN', 'AMT',  'DTE', 'DVN', 'EMN', 'FBIN', 'FERG', 'FR', 'GIS', 'H', 'LMT', 'LNT', 'LSTR',  'MCK', 'MCO', 'NEM', 'NLY', 'NNN', 'NUE',  'PEP', 'PH', 'PHM',  'RRC',  'SLB', 'TMO', 'AA', 
-'AAL', 'CF',  'CTRA','PG', 'VZ',  'MSFT', 'JNJ', 'V', 'MA', 'TRGP', 'OKE', 'SON',  'HD', 'INTC']
+#'BIIB', 'DVA', 'HOLX', 
+
+heath_care_dec_start = ['ABBV', 'ABT', 'ALGN', 'AMGN', 'BAX', 'BDX',  'BIO', 'BMY', 'BSX', 'CAH', 'COR', 'CRL', 'CTLT', 'CVS', 'DGX', 'DHR', 'DXCM', 'EW', 'GILD', 'HSIC', 'TMO', 'UHS', 'VRTX', 'VTRS', 'IDXX', 'ILMN', 'INCY', 'WST', 'ZTS', 'ISRG', 'JNJ']
+# heath_care_dec_start = ['IDXX', 'ILMN', 'INCY', 'IQV', 'ISRG', 
+# 'JNJ', 'LH', 'LLY', 'MCK', 'MRK', 
+# 'MTD', 'PFE', 'PODD', 'REGN', 'RMD', 
+# 'RVTY', 'STE', 'SYK', 'TECH', 'TFX', 
+# 'TMO', 'UHS', 'VRTX', 'VTRS', 
+# 'WAT', 'WST', 'XRAY', 'ZBH', 'ZTS']
+#not good: WAT
+#not very good: MCK, MRK, PFE, PODD, 'LH', 'REGN', 'RVTY'
+
+energy_dec_start = ['APA', 'COP', 'CTRA', 'EOG', 'FANG', 'HAL', 'HES', 'KMI', 'MPC', 'MRO', 'OKE', 'OXY', 'PSX', 'PXD', 'SLB', 'TRGP', 'VLO', 'WMB', 'XOM']
+#'BKR',
+
+
+
+Russel_2000_stock_list = ['AAPL', 'AME', 'AMGN', 'AMT',  'DTE', 'DVN', 'EMN', 'FBIN', 'FERG', 'FR', 'GIS', 'H', 'LMT', 'LNT', 'LSTR',  'MCK', 'MCO', 'NEM', 'NLY', 'NNN', 'NUE',  'PEP', 'PH', 'PHM',  'RRC',  'SLB', 'TMO', 'AA', 'AAL', 'CF',  'CTRA','PG', 'VZ',  'MSFT', 'JNJ', 'V', 'MA', 'TRGP', 'OKE', 'SON',  'HD', 'INTC']
+
 #AMZN, GOOGL, JLL, AMAT, 
 # lst = find_common_features(args,info_tech_dec_start+info_tech_jan_start+info_tech_feb_start)
 # lst.sort()
 # print(lst)
 # exit()
-betas_dict = generate_betas(info_tech_dec_start+info_tech_jan_start+info_tech_feb_start, args)
+betas_dict = generate_betas(energy_dec_start, args) #+info_tech_jan_start+info_tech_feb_start, args)
 # print(len(betas_dict.keys()))
 # print(len(betas_dict['AAPL']))
 # print(len(betas_dict))
